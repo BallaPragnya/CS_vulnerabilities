@@ -1,0 +1,4 @@
+node_modules/
+database/campusconnect.db
+npm-debug.log*
+.env
