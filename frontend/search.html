@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search – CampusConnect</title>
+  <meta name="description" content="Search for students by name, email, or department." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-breadcrumb">CampusConnect / <span>Search</span></div>
+        </div>
+      </header>
+
+      <div class="page-inner">
+
+        <div class="page-header fade-in">
+          <h1>🔍 Search Students</h1>
+          <p>Search the directory by name, email, or department.</p>
+        </div>
+
+        <!-- Search form -->
+        <div class="card fade-in mb-lg">
+          <form id="search-form">
+            <div class="flex gap-md items-center">
+              <div class="search-box w-full">
+                <span class="search-icon">🔍</span>
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="e.g. Alice, Computer Science, alice@campusconnect.edu"
+                  autocomplete="off"
+                />
+              </div>
+              <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Search</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Results area -->
+        <div id="search-results" class="fade-in">
+          <p class="text-muted text-center">Enter a search term above to find students.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/search.js"></script>
+</body>
+</html>

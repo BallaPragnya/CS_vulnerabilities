@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – CampusConnect</title>
+  <meta name="description" content="CampusConnect user dashboard. View stats and recent activity." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-breadcrumb">CampusConnect / <span>Dashboard</span></div>
+        </div>
+      </header>
+
+      <div class="page-inner">
+
+        <!-- Welcome banner -->
+        <div class="page-header fade-in">
+          <h1>👋 Welcome back, <span id="welcome-name">...</span></h1>
+          <p>You are logged in as <span id="welcome-role" style="color:var(--color-primary-h); font-weight:600;"></span>.</p>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="grid grid-4 mb-lg">
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(99,102,241,0.15);">👨‍🎓</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-students">—</div>
+              <div class="stat-label">Total Students</div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.15);">⏱️</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-uptime">—</div>
+              <div class="stat-label">Server Uptime</div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(34,211,238,0.15);">📡</div>
+            <div class="stat-info">
+              <div class="stat-value">Online</div>
+              <div class="stat-label">Server Status</div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.15);">🔒</div>
+            <div class="stat-info">
+              <div class="stat-value">Active</div>
+              <div class="stat-label">Session</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick links + Recent activity -->
+        <div class="grid grid-2 gap-lg">
+
+          <!-- Quick links -->
+          <div class="card fade-in">
+            <div class="card-header">
+              <span class="card-title">Quick Access</span>
+            </div>
+            <div class="flex flex-col gap-sm">
+              <a href="/directory.html"   class="btn btn-ghost">📋 Student Directory</a>
+              <a href="/search.html"      class="btn btn-ghost">🔍 Search Students</a>
+              <a href="/diagnostics.html" class="btn btn-ghost">🖥️ Server Diagnostics</a>
+              <a href="/settings.html"    class="btn btn-ghost">⚙️ Account Settings</a>
+            </div>
+          </div>
+
+          <!-- Recent activity -->
+          <div class="card fade-in">
+            <div class="card-header">
+              <span class="card-title">Recent Activity</span>
+              <a href="/diagnostics.html" class="btn btn-sm btn-ghost">View all →</a>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr><th>User</th><th>Action</th><th>When</th></tr>
+                </thead>
+                <tbody id="log-tbody">
+                  <tr><td colspan="3" class="text-center text-muted">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

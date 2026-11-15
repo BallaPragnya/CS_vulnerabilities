@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home – CampusConnect</title>
+  <meta name="description" content="CampusConnect student portal home page. Access the directory, search, diagnostics, and settings modules." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* Hero section styles specific to the homepage */
+    .hero {
+      padding: var(--space-2xl) 0 var(--space-xl);
+      position: relative;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: var(--radius-full);
+      padding: 4px 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-primary-h);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-md);
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      line-height: 1.2;
+      max-width: 600px;
+    }
+    .hero p {
+      max-width: 520px;
+      font-size: 1rem;
+      margin-top: var(--space-sm);
+      margin-bottom: var(--space-xl);
+    }
+    .hero-actions {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    /* Module colour theming */
+    #card-directory   { --module-color: #6366f1; }
+    #card-search      { --module-color: #22d3ee; }
+    #card-diagnostics { --module-color: #f59e0b; }
+    #card-settings    { --module-color: #10b981; }
+
+    .module-card .module-icon {
+      background: rgba(var(--module-color-rgb, 99,102,241), 0.12);
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    /* Credential table */
+    .creds-card { margin-top: var(--space-xl); }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar (injected by common.js) -->
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <!-- Main content -->
+    <div class="main-content">
+
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-breadcrumb">
+            CampusConnect / <span>Home</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span id="topbar-user" class="text-sm text-muted"></span>
+        </div>
+      </header>
+
+      <!-- Page body -->
+      <div class="page-inner">
+
+        <!-- Hero section -->
+        <section class="hero fade-in">
+          <div class="hero-eyebrow">🎓 University Portal</div>
+          <h1>Welcome to<br/>CampusConnect</h1>
+          <p>Your all-in-one platform for student management, directory lookup, diagnostics, and account settings.</p>
+          <div class="hero-actions">
+            <a href="/dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard →</a>
+            <a href="/directory.html" class="btn btn-outline btn-lg">Browse Directory</a>
+          </div>
+        </section>
+
+        <!-- Modules section -->
+        <section>
+          <div class="section-title">Portal Modules</div>
+          <div class="grid grid-2 gap-lg">
+
+            <a href="/directory.html" class="module-card card-hover" id="card-directory">
+              <div class="module-icon" style="background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.2);">📋</div>
+              <div>
+                <div class="module-title">Student Directory</div>
+                <div class="module-desc">Browse and manage the full list of enrolled students. View names, departments, years, and GPA records.</div>
+              </div>
+            </a>
+
+            <a href="/search.html" class="module-card card-hover" id="card-search">
+              <div class="module-icon" style="background:rgba(34,211,238,0.12); border-color:rgba(34,211,238,0.2);">🔍</div>
+              <div>
+                <div class="module-title">Search</div>
+                <div class="module-desc">Search for students by name, email address, or department using the live search interface.</div>
+              </div>
+            </a>
+
+            <a href="/diagnostics.html" class="module-card card-hover" id="card-diagnostics">
+              <div class="module-icon" style="background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.2);">🖥️</div>
+              <div>
+                <div class="module-title">Server Diagnostics</div>
+                <div class="module-desc">Monitor server health, uptime, memory usage, and view the full audit log of user actions.</div>
+              </div>
+            </a>
+
+            <a href="/settings.html" class="module-card card-hover" id="card-settings">
+              <div class="module-icon" style="background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.2);">⚙️</div>
+              <div>
+                <div class="module-title">Settings</div>
+                <div class="module-desc">View and update your profile information including display name and email address.</div>
+              </div>
+            </a>
+
+          </div>
+        </section>
+
+        <!-- Credentials quick reference -->
+        <section class="creds-card">
+          <div class="section-title">Lab Credentials</div>
+          <div class="card">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr><th>Role</th><th>Username</th><th>Password</th><th>Access Level</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="badge badge-danger">admin</span></td>
+                    <td class="font-mono">admin</td>
+                    <td class="font-mono">admin123</td>
+                    <td class="text-muted">Full access to all modules</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge badge-warning">teacher</span></td>
+                    <td class="font-mono">teacher</td>
+                    <td class="font-mono">teacher123</td>
+                    <td class="text-muted">View and manage student records</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge badge-primary">student</span></td>
+                    <td class="font-mono">alice</td>
+                    <td class="font-mono">alice123</td>
+                    <td class="text-muted">Limited read-only access</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /page-inner -->
+    </div><!-- /main-content -->
+  </div><!-- /layout -->
+
+  <script src="/js/common.js"></script>
+  <script>
+    // Initialise sidebar on the homepage
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (!user) return;
+      buildSidebar(user);
+      document.getElementById('topbar-user').textContent = user.full_name;
+    });
+  </script>
+</body>
+</html>

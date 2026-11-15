@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings – CampusConnect</title>
+  <meta name="description" content="Manage your CampusConnect account settings and profile." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-breadcrumb">CampusConnect / <span>Settings</span></div>
+        </div>
+      </header>
+
+      <div class="page-inner">
+
+        <div class="page-header fade-in">
+          <h1>⚙️ Account Settings</h1>
+          <p>View and update your profile information.</p>
+        </div>
+
+        <div id="settings-alert" class="alert"></div>
+
+        <div class="grid grid-2 gap-lg">
+
+          <!-- Profile summary card -->
+          <div class="card fade-in">
+            <div class="card-header">
+              <span class="card-title">Profile</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:var(--space-lg); margin-bottom:var(--space-lg);">
+              <div id="profile-avatar" style="
+                width:64px; height:64px;
+                border-radius:50%;
+                background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+                display:flex; align-items:center; justify-content:center;
+                font-size:1.6rem; font-weight:700; color:white;
+                flex-shrink:0;
+              ">?</div>
+              <div>
+                <div style="font-size:0.8rem; color:var(--color-text-dim); margin-bottom:4px;">USERNAME</div>
+                <div id="profile-username" class="font-mono" style="font-size:1.1rem; font-weight:600; color:var(--color-text);">—</div>
+              </div>
+            </div>
+            <div class="flex gap-lg">
+              <div>
+                <div style="font-size:0.75rem; color:var(--color-text-dim); margin-bottom:2px;">ROLE</div>
+                <div id="profile-role" class="font-mono text-sm">—</div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem; color:var(--color-text-dim); margin-bottom:2px;">JOINED</div>
+                <div id="profile-joined" class="text-sm text-muted">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit profile form -->
+          <div class="card fade-in">
+            <div class="card-header">
+              <span class="card-title">Edit Profile</span>
+            </div>
+            <form id="profile-form">
+              <div class="form-group">
+                <label for="input-name">Display Name</label>
+                <input type="text" id="input-name" placeholder="Your full name" required />
+              </div>
+              <div class="form-group">
+                <label for="input-email">Email Address</label>
+                <input type="email" id="input-email" placeholder="you@campusconnect.edu" required />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block mt-sm">Save Changes</button>
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/settings.js"></script>
+</body>
+</html>

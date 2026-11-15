@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnostics – CampusConnect</title>
+  <meta name="description" content="Server diagnostics and audit log for CampusConnect." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-breadcrumb">CampusConnect / <span>Diagnostics</span></div>
+        </div>
+      </header>
+
+      <div class="page-inner">
+
+        <div class="page-header fade-in">
+          <h1>🖥️ Server Diagnostics</h1>
+          <p>Live server status and full audit log of all user actions.</p>
+        </div>
+
+        <div id="status-alert" class="alert"></div>
+
+        <!-- Server status cards -->
+        <div class="grid grid-3 mb-lg">
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.15);">🟢</div>
+            <div class="stat-info">
+              <div class="stat-value text-sm" id="status-server">—</div>
+              <div class="stat-label">Server Version</div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(99,102,241,0.15);">⏱️</div>
+            <div class="stat-info">
+              <div class="stat-value text-sm" id="status-uptime">—</div>
+              <div class="stat-label">Uptime</div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.15);">💾</div>
+            <div class="stat-info">
+              <div class="stat-value text-sm" id="status-memory">—</div>
+              <div class="stat-label">Memory Usage</div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(34,211,238,0.15);">⚙️</div>
+            <div class="stat-info">
+              <div class="stat-value text-sm" id="status-node">—</div>
+              <div class="stat-label">Node.js Version</div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(99,102,241,0.15);">🖥️</div>
+            <div class="stat-info">
+              <div class="stat-value text-sm" id="status-platform">—</div>
+              <div class="stat-label">Platform</div>
+            </div>
+          </div>
+
+          <div class="stat-card fade-in">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.15);">🕐</div>
+            <div class="stat-info">
+              <div class="stat-value text-xs" id="status-time">—</div>
+              <div class="stat-label">Server Time</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Audit log table -->
+        <div class="card fade-in">
+          <div class="card-header">
+            <span class="card-title">Audit Log (Last 20 Actions)</span>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="log-tbody">
+                <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/diagnostics.js"></script>
+</body>
+</html>
