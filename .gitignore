@@ -1,4 +1,43 @@
+# ─── Node.js ─────────────────────────────────────────────
 node_modules/
-database/campusconnect.db
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# ─── Environment & Secrets ───────────────────────────────
 .env
+.env.local
+.env.*.local
+
+# ─── Database (auto-created at runtime) ──────────────────
+# The .db file is recreated automatically when the server starts.
+# See backend/database.js for the seed data and schema.
+database/*.db
+database/*.db-shm
+database/*.db-wal
+
+# ─── OS / Editor artefacts ───────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ─── IDE ─────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ─── Logs ────────────────────────────────────────────────
+logs/
+*.log
+
+# ─── Misc ────────────────────────────────────────────────
+*.tmp
+*.bak
