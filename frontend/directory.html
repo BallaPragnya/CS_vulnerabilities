@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Directory – CampusConnect</title>
-  <meta name="description" content="Browse the full student directory on CampusConnect." />
+  <title>Student Directory – CampusConnect</title>
+  <meta name="description" content="Search the CampusConnect student directory." />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -14,45 +14,337 @@
     <div class="main-content">
       <header class="topbar">
         <div class="topbar-left">
-          <div class="topbar-breadcrumb">CampusConnect / <span>Directory</span></div>
-        </div>
-        <div class="topbar-right">
-          <a href="/search.html" class="btn btn-sm btn-outline">🔍 Search Students</a>
+          <div class="topbar-breadcrumb">CampusConnect / <span>Student Directory</span></div>
         </div>
       </header>
 
       <div class="page-inner">
 
-        <div class="page-header fade-in">
-          <h1>📋 Student Directory</h1>
-          <p>Browse all enrolled students. <span id="student-count" class="text-muted"></span></p>
+        <!-- Page header -->
+        <div class="page-header fade-up">
+          <h1>👥 Student Directory</h1>
+          <p>Search for enrolled students by name. This module also demonstrates SQL Injection via UNION-based data extraction.</p>
         </div>
 
-        <div class="card fade-in">
-          <div class="table-wrapper">
-            <table>
+        <!-- ══ MODE SELECTOR ══════════════════════════════════════════════ -->
+        <div class="lab-mode-selector fade-up">
+          <div class="lab-mode-label">🔬 Lab Mode:</div>
+          <div class="lab-mode-tabs">
+            <button class="lab-tab active" id="tab-normal" onclick="setMode('normal')">
+              📋 Normal Search
+            </button>
+            <button class="lab-tab" id="tab-lab" onclick="setMode('lab')">
+              💉 SQL Injection Lab
+            </button>
+          </div>
+        </div>
+
+        <!-- ══ NORMAL SEARCH PANEL ════════════════════════════════════════ -->
+        <div id="panel-normal">
+          <div class="card fade-up mb-lg">
+            <div class="card-header">
+              <span class="card-title">🔍 Search Students</span>
+            </div>
+            <form id="normal-form">
+              <div class="flex gap-md items-center" style="flex-wrap:wrap;">
+                <div class="input-group" style="flex:1; min-width:260px;">
+                  <span class="input-icon">👤</span>
+                  <input type="text" id="normal-search" placeholder="Enter student name…" autocomplete="off" />
+                </div>
+                <button type="submit" class="btn btn-primary" id="normal-btn">
+                  <span id="normal-spinner" class="spinner" style="display:none;"></span>
+                  <span>Search</span>
+                </button>
+              </div>
+            </form>
+          </div>
+          <!-- Results -->
+          <div id="normal-results"></div>
+        </div>
+
+        <!-- ══ SQL INJECTION LAB PANEL ════════════════════════════════════ -->
+        <div id="panel-lab" style="display:none;">
+
+          <!-- Explanation -->
+          <div class="vuln-info-box fade-up">
+            <div class="vuln-info-title">💉 Module 2 – SQL Injection: UNION-based Data Extraction</div>
+            <p>
+              In a vulnerable search endpoint, user input is embedded directly in a LIKE clause.
+              An attacker can inject a <code>UNION SELECT</code> statement to append data from
+              any other table in the database (e.g. the users table with usernames and passwords).
+            </p>
+            <p>
+              <strong>UNION attack requirements:</strong> The injected SELECT must return the
+              same number of columns as the original query (6 columns here).
+            </p>
+            <div class="vuln-payload-box">
+              <strong>Example payload:</strong><br/>
+              <code>' UNION SELECT username, password, role, email, 1, 1 FROM users --</code>
+            </div>
+          </div>
+
+          <!-- Sub-mode toggle -->
+          <div class="sub-mode-row">
+            <button class="sub-mode-btn active" id="sub-vuln" onclick="setSubMode('vulnerable')">
+              ⚠️ Vulnerable Mode
+            </button>
+            <button class="sub-mode-btn" id="sub-secure" onclick="setSubMode('secure')">
+              ✅ Secure Mode
+            </button>
+          </div>
+
+          <!-- Banners -->
+          <div id="vuln-banner" class="mode-banner mode-banner-vuln">
+            <strong>⚠️ VULNERABLE MODE</strong> – Input is concatenated into the SQL LIKE clause without parameterisation.
+          </div>
+          <div id="secure-banner" class="mode-banner mode-banner-safe" style="display:none;">
+            <strong>✅ SECURE MODE</strong> – Input is bound via parameterised query. UNION injection is impossible.
+          </div>
+
+          <!-- Search form -->
+          <div class="card fade-up">
+            <div class="card-header">
+              <span class="card-title">🔍 Search Input</span>
+            </div>
+            <form id="sqli-form">
+              <div class="form-group">
+                <label for="sqli-search">Student Name / Injection Payload</label>
+                <input type="text" id="sqli-search"
+                       placeholder="e.g. Alice   or   ' UNION SELECT username, password, role, email, 1, 1 FROM users --"
+                       autocomplete="off" style="font-family: monospace;" />
+              </div>
+
+              <!-- Quick payload buttons -->
+              <div class="payload-row">
+                <span class="payload-label">Quick payloads:</span>
+                <button type="button" class="payload-btn" onclick="setPayload('Alice')">
+                  Normal: Alice
+                </button>
+                <button type="button" class="payload-btn"
+                        onclick="setPayload(&quot;' UNION SELECT username, password, role, email, 1, 1 FROM users --&quot;)">
+                  UNION dump users
+                </button>
+                <button type="button" class="payload-btn"
+                        onclick="setPayload(&quot;' UNION SELECT id, username, password, email, 1, 1 FROM sqli_demo_users --&quot;)">
+                  UNION dump demo table
+                </button>
+                <button type="button" class="payload-btn" onclick="setPayload('')">
+                  All students
+                </button>
+              </div>
+
+              <button type="submit" class="btn btn-primary mt-sm" id="sqli-btn">
+                <span id="sqli-spinner" class="spinner" style="display:none;"></span>
+                <span id="sqli-label">Run Query</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Results -->
+          <div id="sqli-result" class="result-panel" style="display:none; margin-top:1rem;">
+            <div class="result-section">
+              <div class="result-label">🗄️ Constructed SQL Query:</div>
+              <pre id="sqli-sql" class="code-block"></pre>
+            </div>
+            <div class="result-section">
+              <div class="result-label">📊 Rows Returned (<span id="sqli-count">0</span>):</div>
+              <div id="sqli-table-wrap"></div>
+            </div>
+            <div class="result-section">
+              <div class="result-label">💬 Explanation:</div>
+              <div id="sqli-explanation" class="result-explanation"></div>
+            </div>
+          </div>
+
+        </div><!-- /panel-lab -->
+
+      </div><!-- /page-inner -->
+    </div><!-- /main-content -->
+  </div><!-- /layout -->
+
+  <script src="/js/common.js"></script>
+  <script>
+    /**
+     * directory.html – inline JavaScript
+     *
+     * Handles:
+     *  1. Normal student search (safe, parameterised)
+     *  2. SQL Injection UNION demo (vulnerable/secure modes)
+     */
+
+    let currentSubMode = 'vulnerable';
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (!user) return;
+      buildSidebar(user);
+      loadAllStudents(); // Load all students initially in normal mode
+    });
+
+    // ── Mode switching ───────────────────────────────────────────────────────
+    function setMode(mode) {
+      document.getElementById('panel-normal').style.display = (mode === 'normal') ? '' : 'none';
+      document.getElementById('panel-lab').style.display    = (mode === 'lab')    ? '' : 'none';
+      document.getElementById('tab-normal').classList.toggle('active', mode === 'normal');
+      document.getElementById('tab-lab').classList.toggle('active',    mode === 'lab');
+    }
+
+    function setSubMode(sub) {
+      currentSubMode = sub;
+      document.getElementById('sub-vuln').classList.toggle('active',   sub === 'vulnerable');
+      document.getElementById('sub-secure').classList.toggle('active',  sub === 'secure');
+      document.getElementById('vuln-banner').style.display   = (sub === 'vulnerable') ? '' : 'none';
+      document.getElementById('secure-banner').style.display = (sub === 'secure')     ? '' : 'none';
+      document.getElementById('sqli-result').style.display   = 'none';
+    }
+
+    function setPayload(text) {
+      document.getElementById('sqli-search').value = text;
+    }
+
+    // ── Normal search ────────────────────────────────────────────────────────
+    async function loadAllStudents() {
+      try {
+        const data = await apiFetch('/api/directory');
+        if (data.success) renderNormalResults(data.students);
+      } catch (e) {
+        // Fall back to mock data
+        renderNormalResults(MOCK_DATA.students.map(s => ({
+          student_id: s.id, full_name: s.name, email: s.email,
+          department: s.dept, year: s.year, gpa: s.gpa
+        })));
+      }
+    }
+
+    document.getElementById('normal-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('normal-search').value.trim();
+      document.getElementById('normal-btn').disabled = true;
+      try {
+        const data = await apiFetch(`/api/directory/search?name=${encodeURIComponent(name)}`);
+        if (data.success) renderNormalResults(data.students);
+      } catch (e) {
+        const filtered = MOCK_DATA.students.filter(s => s.name.toLowerCase().includes(name.toLowerCase()));
+        renderNormalResults(filtered.map(s => ({
+          student_id: s.id, full_name: s.name, email: s.email,
+          department: s.dept, year: s.year, gpa: s.gpa
+        })));
+      }
+      document.getElementById('normal-btn').disabled = false;
+    });
+
+    function renderNormalResults(students) {
+      const container = document.getElementById('normal-results');
+      if (!students || students.length === 0) {
+        container.innerHTML = '<div class="empty-state">No students found.</div>';
+        return;
+      }
+      container.innerHTML = `
+        <div class="card fade-up">
+          <div class="card-header">
+            <span class="card-title">👥 Students Found (${students.length})</span>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
               <thead>
                 <tr>
-                  <th>Student ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Department</th>
-                  <th style="text-align:center;">Year</th>
-                  <th style="text-align:center;">GPA</th>
+                  <th>Enrollment</th><th>Name</th><th>Email</th>
+                  <th>Department</th><th>Year</th><th>GPA</th>
                 </tr>
               </thead>
-              <tbody id="dir-tbody">
-                <tr><td colspan="6" class="text-center text-muted">Loading…</td></tr>
+              <tbody>
+                ${students.map(s => `
+                  <tr>
+                    <td><code>${escHtml(String(s.student_id || ''))}</code></td>
+                    <td>${escHtml(String(s.full_name || ''))}</td>
+                    <td>${escHtml(String(s.email || ''))}</td>
+                    <td>${escHtml(String(s.department || ''))}</td>
+                    <td>${escHtml(String(s.year || ''))}</td>
+                    <td>${escHtml(String(s.gpa || ''))}</td>
+                  </tr>`).join('')}
               </tbody>
             </table>
           </div>
         </div>
+      `;
+    }
 
-      </div>
-    </div>
-  </div>
+    // ── SQL Injection demo search ─────────────────────────────────────────────
+    document.getElementById('sqli-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name     = document.getElementById('sqli-search').value;
+      const endpoint = currentSubMode === 'vulnerable'
+        ? '/api/directory/search-vuln'
+        : '/api/directory/search-safe';
 
-  <script src="/js/common.js"></script>
-  <script src="/js/directory.js"></script>
+      document.getElementById('sqli-btn').disabled = true;
+      document.getElementById('sqli-spinner').style.display = 'inline-block';
+      document.getElementById('sqli-label').textContent = 'Running…';
+
+      try {
+        const data = await apiFetch(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({ name })
+        });
+        displaySqliResult(data);
+      } catch (err) {
+        alert('Could not connect to server. Is the backend running?');
+      }
+
+      document.getElementById('sqli-btn').disabled = false;
+      document.getElementById('sqli-spinner').style.display = 'none';
+      document.getElementById('sqli-label').textContent = 'Run Query';
+    });
+
+    function displaySqliResult(data) {
+      const panel = document.getElementById('sqli-result');
+      panel.style.display = '';
+
+      // Show SQL
+      let sqlDisplay = data.constructedSql || '—';
+      if (data.parameterValues) {
+        sqlDisplay += `\n\nParameter values: ${JSON.stringify(data.parameterValues)}`;
+      }
+      document.getElementById('sqli-sql').textContent = sqlDisplay;
+      document.getElementById('sqli-count').textContent = data.rowCount || 0;
+
+      // Render table of results
+      const tableWrap = document.getElementById('sqli-table-wrap');
+      if (data.queryError) {
+        tableWrap.innerHTML = `<div class="result-outcome outcome-error">💥 SQL Error: <code>${escHtml(data.queryError)}</code></div>`;
+      } else if (!data.rows || data.rows.length === 0) {
+        tableWrap.innerHTML = `<div class="result-outcome outcome-blocked">No rows returned.</div>`;
+      } else {
+        // Show all columns (may include injected data)
+        const cols = Object.keys(data.rows[0]);
+        tableWrap.innerHTML = `
+          <div class="table-wrap">
+            <table class="data-table ${data.mode === 'vulnerable' ? 'table-vuln' : ''}">
+              <thead><tr>${cols.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr></thead>
+              <tbody>
+                ${data.rows.map(row => `
+                  <tr>
+                    ${cols.map(c => `<td>${escHtml(String(row[c] ?? ''))}</td>`).join('')}
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      // Explanation
+      document.getElementById('sqli-explanation').textContent = data.explanation || '';
+    }
+
+    // Safely escape HTML (prevents XSS in our own result display)
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
 </body>
 </html>

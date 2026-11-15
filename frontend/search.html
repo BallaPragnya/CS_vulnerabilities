@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Search – CampusConnect</title>
-  <meta name="description" content="Search for students by name, email, or department." />
+  <title>Campus Search – CampusConnect</title>
+  <meta name="description" content="Search campus announcements and events. Demonstrates Reflected XSS." />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -14,45 +14,354 @@
     <div class="main-content">
       <header class="topbar">
         <div class="topbar-left">
-          <div class="topbar-breadcrumb">CampusConnect / <span>Search</span></div>
+          <div class="topbar-breadcrumb">CampusConnect / <span>Campus Search</span></div>
         </div>
       </header>
 
       <div class="page-inner">
 
-        <div class="page-header fade-in">
-          <h1>🔍 Search Students</h1>
-          <p>Search the directory by name, email, or department.</p>
+        <!-- Page header -->
+        <div class="page-header fade-up">
+          <h1>🔍 Campus Search</h1>
+          <p>Search campus announcements and events. This module also demonstrates Reflected XSS.</p>
         </div>
 
-        <!-- Search form -->
-        <div class="card fade-in mb-lg">
-          <form id="search-form">
-            <div class="flex gap-md items-center">
-              <div class="search-box w-full">
-                <span class="search-icon">🔍</span>
-                <input
-                  type="text"
-                  id="search-input"
-                  placeholder="e.g. Alice, Computer Science, alice@campusconnect.edu"
-                  autocomplete="off"
-                />
+        <!-- ══ MODE SELECTOR ═════════════════════════════════════════════ -->
+        <div class="lab-mode-selector fade-up">
+          <div class="lab-mode-label">🔬 Lab Mode:</div>
+          <div class="lab-mode-tabs">
+            <button class="lab-tab active" id="tab-normal" onclick="setMode('normal')">
+              🔍 Normal Search
+            </button>
+            <button class="lab-tab" id="tab-lab" onclick="setMode('lab')">
+              💉 XSS Lab
+            </button>
+          </div>
+        </div>
+
+        <!-- ══ NORMAL SEARCH PANEL ════════════════════════════════════════ -->
+        <div id="panel-normal">
+          <div class="card fade-up mb-lg">
+            <form id="normal-search-form" role="search">
+              <div class="flex gap-md items-center" style="flex-wrap:wrap;">
+                <div class="input-group" style="flex:1; min-width:260px;">
+                  <span class="input-icon">🔍</span>
+                  <input type="search" id="normal-search-input"
+                         placeholder="Search announcements and events…"
+                         autocomplete="off" aria-label="Search" />
+                </div>
+                <button type="submit" class="btn btn-primary" id="normal-search-btn">Search</button>
               </div>
-              <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Search</button>
+            </form>
+          </div>
+
+          <!-- Announcements -->
+          <div class="section-title">📢 Recent Announcements</div>
+          <div id="announcements-list" class="grid grid-2 gap-lg mb-lg"></div>
+
+          <!-- Events -->
+          <div class="section-title">📅 Upcoming Events</div>
+          <div id="events-list" class="grid grid-2 gap-lg"></div>
+        </div>
+
+        <!-- ══ XSS LAB PANEL ══════════════════════════════════════════════ -->
+        <div id="panel-lab" style="display:none;">
+
+          <!-- Explanation -->
+          <div class="vuln-info-box fade-up">
+            <div class="vuln-info-title">💉 Module 4 – Reflected XSS (Cross-Site Scripting)</div>
+            <p>
+              In a vulnerable search page, the search term is reflected back into the HTML response
+              without escaping. If the search term contains HTML or JavaScript, the browser executes it.
+            </p>
+            <p>
+              An attacker can craft a URL with an XSS payload in the query string and trick a victim
+              into clicking it. When the victim opens the link, the script runs in <em>their</em> browser
+              under the application's origin.
+            </p>
+            <div class="vuln-payload-box">
+              <strong>Example payloads:</strong><br/>
+              <code>&lt;img src=x onerror="alert('XSS!')"&gt;</code> — classic image error XSS<br/>
+              <code>&lt;b style="color:red"&gt;Injected!&lt;/b&gt;</code> — HTML injection<br/>
+              <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code> — inline script (some browsers block)
             </div>
-          </form>
-        </div>
+          </div>
 
-        <!-- Results area -->
-        <div id="search-results" class="fade-in">
-          <p class="text-muted text-center">Enter a search term above to find students.</p>
-        </div>
+          <!-- Sub-mode toggle -->
+          <div class="sub-mode-row">
+            <button class="sub-mode-btn active" id="sub-vuln" onclick="setSubMode('vulnerable')">
+              ⚠️ Vulnerable Mode
+            </button>
+            <button class="sub-mode-btn" id="sub-secure" onclick="setSubMode('secure')">
+              ✅ Secure Mode
+            </button>
+          </div>
 
-      </div>
-    </div>
-  </div>
+          <!-- Mode banners -->
+          <div id="vuln-banner" class="mode-banner mode-banner-vuln">
+            <strong>⚠️ VULNERABLE MODE</strong> – Search term reflected with <code>innerHTML</code>.
+            JavaScript in the input will execute.
+          </div>
+          <div id="secure-banner" class="mode-banner mode-banner-safe" style="display:none;">
+            <strong>✅ SECURE MODE</strong> – Search term set with <code>textContent</code> (safe output encoding).
+            All HTML is treated as plain text.
+          </div>
+
+          <!-- XSS search form -->
+          <div class="card fade-up">
+            <div class="card-header">
+              <span class="card-title">🔍 Search Input</span>
+            </div>
+            <form id="xss-form">
+              <div class="form-group">
+                <label for="xss-input">Search Term / XSS Payload</label>
+                <input type="text" id="xss-input"
+                       placeholder="Try: &lt;img src=x onerror=alert('XSS!')&gt;"
+                       autocomplete="off" style="font-family: monospace;" />
+              </div>
+
+              <!-- Quick payload buttons -->
+              <div class="payload-row">
+                <span class="payload-label">Quick payloads:</span>
+                <button type="button" class="payload-btn" onclick="setPayload('exam results')">
+                  Normal search
+                </button>
+                <button type="button" class="payload-btn"
+                        onclick="setPayload(&quot;<img src=x onerror=alert('XSS Demo!')>&quot;)">
+                  img onerror alert
+                </button>
+                <button type="button" class="payload-btn"
+                        onclick="setPayload(&quot;<b style='color:red'>Injected!</b>&quot;)">
+                  HTML injection
+                </button>
+                <button type="button" class="payload-btn"
+                        onclick="setPayload(&quot;<marquee>Scrolling XSS</marquee>&quot;)">
+                  Marquee tag
+                </button>
+              </div>
+
+              <button type="submit" class="btn btn-primary mt-sm" id="xss-btn">
+                <span>Search</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- XSS result display -->
+          <div id="xss-result" class="card" style="display:none; margin-top:1rem;">
+            <div class="card-header">
+              <span class="card-title">📄 Search Results Page</span>
+            </div>
+
+            <!-- Code comparison -->
+            <div class="result-section">
+              <div class="result-label">🗄️ How the search term is inserted into the page:</div>
+              <div id="xss-code-comparison" class="code-block"></div>
+            </div>
+
+            <!-- Simulated "search results" area -->
+            <div class="result-section">
+              <div class="result-label">📺 Rendered Output (what the victim sees):</div>
+              <div id="xss-rendered-box" class="xss-preview-box">
+                <div class="xss-preview-label">Search results for:</div>
+                <!-- VULNERABLE: innerHTML set here (may execute scripts) -->
+                <!-- SECURE: textContent set here (safe, no script execution) -->
+                <div id="xss-reflected-output" class="xss-reflected-term"></div>
+              </div>
+            </div>
+
+            <div class="result-section">
+              <div class="result-label">💬 Explanation:</div>
+              <div id="xss-explanation" class="result-explanation"></div>
+            </div>
+          </div>
+
+        </div><!-- /panel-lab -->
+
+      </div><!-- /page-inner -->
+    </div><!-- /main-content -->
+  </div><!-- /layout -->
 
   <script src="/js/common.js"></script>
-  <script src="/js/search.js"></script>
+  <script>
+    /**
+     * search.html – inline JavaScript
+     *
+     * Handles:
+     *  1. Normal campus search (safe, textContent used)
+     *  2. Reflected XSS demo:
+     *     - VULNERABLE mode: uses innerHTML  → XSS payload executes
+     *     - SECURE mode:    uses textContent → XSS payload is escaped
+     *
+     * KEY CONCEPT:
+     *   innerHTML: parses the string as HTML — tags and event handlers execute
+     *   textContent: treats string as plain text — tags appear as literal characters
+     */
+
+    let currentMode    = 'normal';
+    let currentSubMode = 'vulnerable';
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (!user) return;
+      buildSidebar(user);
+      renderDefaultContent();
+    });
+
+    // ── Mode switching ───────────────────────────────────────────────────────
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('panel-normal').style.display = (mode === 'normal') ? '' : 'none';
+      document.getElementById('panel-lab').style.display    = (mode === 'lab')    ? '' : 'none';
+      document.getElementById('tab-normal').classList.toggle('active', mode === 'normal');
+      document.getElementById('tab-lab').classList.toggle('active',    mode === 'lab');
+    }
+
+    function setSubMode(sub) {
+      currentSubMode = sub;
+      document.getElementById('sub-vuln').classList.toggle('active',   sub === 'vulnerable');
+      document.getElementById('sub-secure').classList.toggle('active',  sub === 'secure');
+      document.getElementById('vuln-banner').style.display   = (sub === 'vulnerable') ? '' : 'none';
+      document.getElementById('secure-banner').style.display = (sub === 'secure')     ? '' : 'none';
+      document.getElementById('xss-result').style.display    = 'none';
+    }
+
+    function setPayload(text) {
+      document.getElementById('xss-input').value = text;
+    }
+
+    // ── Render default announcements / events ────────────────────────────────
+    function renderDefaultContent() {
+      const annEl = document.getElementById('announcements-list');
+      const evEl  = document.getElementById('events-list');
+
+      annEl.innerHTML = MOCK_DATA.announcements.map(a => `
+        <div class="card fade-up">
+          <div class="card-header">
+            <span class="card-title">${a.icon} ${escHtml(a.title)}</span>
+            <span class="badge badge-blue" style="font-size:0.65rem;">${escHtml(a.category)}</span>
+          </div>
+          <p style="color:var(--gray-500); font-size:0.85rem; margin:0;">${escHtml(a.body)}</p>
+          <div style="font-size:0.75rem; color:var(--gray-400); margin-top:0.5rem;">${formatDate(a.date)}</div>
+        </div>
+      `).join('');
+
+      evEl.innerHTML = MOCK_DATA.events.map(ev => `
+        <div class="card fade-up">
+          <div class="card-header">
+            <span class="card-title">${ev.icon} ${escHtml(ev.title)}</span>
+          </div>
+          <div style="font-size:0.85rem; color:var(--gray-500);">
+            📅 ${escHtml(ev.date)} · ⏰ ${escHtml(ev.time)}<br/>
+            📍 ${escHtml(ev.venue)}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── Normal search form ───────────────────────────────────────────────────
+    document.getElementById('normal-search-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const term = document.getElementById('normal-search-input').value.trim().toLowerCase();
+
+      const filteredAnn = MOCK_DATA.announcements.filter(a =>
+        a.title.toLowerCase().includes(term) || a.body.toLowerCase().includes(term)
+      );
+      const filteredEv = MOCK_DATA.events.filter(ev =>
+        ev.title.toLowerCase().includes(term) || ev.venue.toLowerCase().includes(term)
+      );
+
+      const annEl = document.getElementById('announcements-list');
+      const evEl  = document.getElementById('events-list');
+
+      if (filteredAnn.length === 0 && filteredEv.length === 0) {
+        annEl.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">No results for "${escHtml(term)}"</div>`;
+        evEl.innerHTML  = '';
+      } else {
+        // Render results using escHtml — SAFE output
+        annEl.innerHTML = filteredAnn.map(a => `
+          <div class="card fade-up">
+            <div class="card-header">
+              <span class="card-title">${a.icon} ${escHtml(a.title)}</span>
+            </div>
+            <p style="color:var(--gray-500); font-size:0.85rem;">${escHtml(a.body)}</p>
+          </div>
+        `).join('') || '';
+        evEl.innerHTML = filteredEv.map(ev => `
+          <div class="card fade-up">
+            <div class="card-header">
+              <span class="card-title">${ev.icon} ${escHtml(ev.title)}</span>
+            </div>
+            <div style="font-size:0.85rem; color:var(--gray-500);">
+              📅 ${escHtml(ev.date)} · 📍 ${escHtml(ev.venue)}
+            </div>
+          </div>
+        `).join('') || '';
+      }
+    });
+
+    // ── XSS demo form ────────────────────────────────────────────────────────
+    document.getElementById('xss-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const payload = document.getElementById('xss-input').value;
+
+      // Show result panel
+      document.getElementById('xss-result').style.display = '';
+
+      const outputEl = document.getElementById('xss-reflected-output');
+
+      if (currentSubMode === 'vulnerable') {
+        //
+        // ⚠️  VULNERABLE: innerHTML reflects the payload as raw HTML.
+        //     If the payload contains <script> tags, event handlers (onerror,
+        //     onclick, etc.), or other executable HTML, the browser will
+        //     interpret and RUN them immediately.
+        //
+        // ► THE VULNERABLE LINE:
+        outputEl.innerHTML = payload;  // ← raw user input set as HTML — DANGEROUS!
+
+        document.getElementById('xss-code-comparison').textContent =
+          '// ⚠️  VULNERABLE CODE:\n' +
+          'const outputEl = document.getElementById("xss-reflected-output");\n' +
+          'outputEl.innerHTML = searchTerm;   // ← raw input, executes scripts!';
+
+        document.getElementById('xss-explanation').textContent =
+          '⚠️  innerHTML was used to insert the search term into the page. '
+          + 'The browser parsed the value as HTML and executed any embedded scripts or event handlers. '
+          + 'An attacker who tricks a user into visiting a URL containing this payload can run arbitrary '
+          + 'JavaScript in the victim\'s browser session.';
+
+      } else {
+        //
+        // ✅  SECURE: textContent treats the payload as plain text.
+        //     The browser does NOT interpret it as HTML. Special characters
+        //     are displayed literally — no script execution is possible.
+        //
+        // ► THE SECURE LINE:
+        outputEl.textContent = payload;  // ← input set as plain text — SAFE!
+
+        document.getElementById('xss-code-comparison').textContent =
+          '// ✅  SECURE CODE:\n' +
+          'const outputEl = document.getElementById("xss-reflected-output");\n' +
+          'outputEl.textContent = searchTerm;  // ← plain text, tags are escaped!';
+
+        document.getElementById('xss-explanation').textContent =
+          '✅  textContent was used. The payload is treated as plain text, not HTML. '
+          + 'The characters < > " are displayed literally on screen. '
+          + 'No script can execute. This is the correct way to reflect user input.';
+      }
+    });
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    // Safely escape HTML (used in our own safe rendering)
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
 </body>
 </html>

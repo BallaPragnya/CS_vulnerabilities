@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings – CampusConnect</title>
-  <meta name="description" content="Manage your CampusConnect account settings and profile." />
+  <title>Account Settings – CampusConnect</title>
+  <meta name="description" content="Manage your CampusConnect account. Demonstrates CSRF vulnerability." />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -14,77 +14,564 @@
     <div class="main-content">
       <header class="topbar">
         <div class="topbar-left">
-          <div class="topbar-breadcrumb">CampusConnect / <span>Settings</span></div>
+          <div class="topbar-breadcrumb">CampusConnect / <span>Account Settings</span></div>
         </div>
       </header>
 
       <div class="page-inner">
 
-        <div class="page-header fade-in">
+        <!-- Page header -->
+        <div class="page-header fade-up">
           <h1>⚙️ Account Settings</h1>
-          <p>View and update your profile information.</p>
+          <p>Update your profile information. This module also demonstrates CSRF (Cross-Site Request Forgery).</p>
         </div>
 
-        <div id="settings-alert" class="alert"></div>
+        <!-- ══ MODE SELECTOR ═════════════════════════════════════════════ -->
+        <div class="lab-mode-selector fade-up">
+          <div class="lab-mode-label">🔬 Lab Mode:</div>
+          <div class="lab-mode-tabs">
+            <button class="lab-tab active" id="tab-normal" onclick="setMode('normal')">
+              ⚙️ Normal Settings
+            </button>
+            <button class="lab-tab" id="tab-lab" onclick="setMode('lab')">
+              💉 CSRF Lab
+            </button>
+          </div>
+        </div>
 
-        <div class="grid grid-2 gap-lg">
+        <!-- Alert box (shared) -->
+        <div id="settings-alert" class="alert" role="alert" aria-live="polite"></div>
 
-          <!-- Profile summary card -->
-          <div class="card fade-in">
-            <div class="card-header">
-              <span class="card-title">Profile</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:var(--space-lg); margin-bottom:var(--space-lg);">
-              <div id="profile-avatar" style="
-                width:64px; height:64px;
-                border-radius:50%;
-                background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-                display:flex; align-items:center; justify-content:center;
-                font-size:1.6rem; font-weight:700; color:white;
-                flex-shrink:0;
-              ">?</div>
-              <div>
-                <div style="font-size:0.8rem; color:var(--color-text-dim); margin-bottom:4px;">USERNAME</div>
-                <div id="profile-username" class="font-mono" style="font-size:1.1rem; font-weight:600; color:var(--color-text);">—</div>
+        <!-- ══ NORMAL SETTINGS PANEL ══════════════════════════════════════ -->
+        <div id="panel-normal">
+          <div class="grid grid-2 gap-lg">
+
+            <!-- Profile summary -->
+            <div>
+              <div class="profile-card fade-up mb-lg">
+                <div class="profile-avatar-lg" id="settings-avatar">A</div>
+                <div>
+                  <div class="p-name"  id="settings-fullname">Loading…</div>
+                  <div class="p-id"    id="settings-id-email">—</div>
+                  <div class="p-tags">
+                    <span class="p-tag" id="settings-dept">—</span>
+                    <span class="p-tag" id="settings-year">—</span>
+                    <span class="p-tag" id="settings-gpa">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card fade-up">
+                <div class="card-header"><span class="card-title">📋 Profile Details</span></div>
+                <div class="profile-detail-row">
+                  <div class="profile-detail-label">Full Name</div>
+                  <div class="profile-detail-value" id="detail-name">—</div>
+                </div>
+                <div class="profile-detail-row">
+                  <div class="profile-detail-label">Enrollment</div>
+                  <div class="profile-detail-value font-mono" id="detail-enrollment">—</div>
+                </div>
+                <div class="profile-detail-row">
+                  <div class="profile-detail-label">Email</div>
+                  <div class="profile-detail-value" id="detail-email">—</div>
+                </div>
+                <div class="profile-detail-row" style="border-bottom:none;">
+                  <div class="profile-detail-label">Department</div>
+                  <div class="profile-detail-value" id="detail-dept">—</div>
+                </div>
               </div>
             </div>
-            <div class="flex gap-lg">
-              <div>
-                <div style="font-size:0.75rem; color:var(--color-text-dim); margin-bottom:2px;">ROLE</div>
-                <div id="profile-role" class="font-mono text-sm">—</div>
+
+            <!-- Edit forms -->
+            <div>
+              <!-- Update name -->
+              <div class="card fade-up mb-lg">
+                <div class="card-header"><span class="card-title">✏️ Edit Profile</span></div>
+                <form id="profile-form">
+                  <div class="form-group">
+                    <label for="input-name">Display Name</label>
+                    <input type="text" id="input-name" placeholder="Your full name" autocomplete="name" required />
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-block mt-sm" id="save-profile-btn">
+                    <span id="save-profile-spinner" class="spinner" style="display:none;"></span>
+                    <span id="save-profile-label">Save Changes</span>
+                  </button>
+                </form>
               </div>
-              <div>
-                <div style="font-size:0.75rem; color:var(--color-text-dim); margin-bottom:2px;">JOINED</div>
-                <div id="profile-joined" class="text-sm text-muted">—</div>
+
+              <!-- Update email (normal, safe) -->
+              <div class="card fade-up mb-lg">
+                <div class="card-header"><span class="card-title">📧 Update Email</span></div>
+                <form id="email-form">
+                  <div class="form-group">
+                    <label for="input-email">New Email Address</label>
+                    <input type="email" id="input-email" placeholder="you@campusconnect.edu" required />
+                  </div>
+                  <button type="submit" class="btn btn-navy btn-block mt-sm" id="update-email-btn">
+                    <span id="update-email-spinner" class="spinner" style="display:none;"></span>
+                    <span id="update-email-label">Update Email</span>
+                  </button>
+                </form>
               </div>
+
+              <!-- Change password -->
+              <div class="card fade-up">
+                <div class="card-header"><span class="card-title">🔒 Change Password</span></div>
+                <form id="password-form">
+                  <div class="form-group">
+                    <label for="input-current-pwd">Current Password</label>
+                    <input type="password" id="input-current-pwd" placeholder="Enter current password" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="input-new-pwd">New Password</label>
+                    <input type="password" id="input-new-pwd" placeholder="Minimum 6 characters" required />
+                  </div>
+                  <button type="submit" class="btn btn-ghost btn-block mt-sm" id="change-pwd-btn">
+                    <span id="pwd-spinner" class="spinner" style="display:none;"></span>
+                    <span id="pwd-label">Change Password</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- /panel-normal -->
+
+        <!-- ══ CSRF LAB PANEL ═════════════════════════════════════════════ -->
+        <div id="panel-lab" style="display:none;">
+
+          <!-- Explanation -->
+          <div class="vuln-info-box fade-up">
+            <div class="vuln-info-title">💉 Module 5 – CSRF: Cross-Site Request Forgery</div>
+            <p>
+              CSRF exploits the fact that browsers automatically include session cookies with every request,
+              even those triggered by a page on a <em>different</em> origin.
+            </p>
+            <p>
+              An attacker can host a page with a hidden, auto-submitting HTML form that sends a POST request
+              to our application. If the user is logged in, the browser attaches their session cookie
+              and the server processes the request — without the user knowing.
+            </p>
+            <div class="vuln-payload-box">
+              <strong>Attacker's page (auto-submitting form):</strong><br/>
+              <code>
+                &lt;form action="http://localhost:3000/api/settings/email-vuln" method="POST"&gt;<br/>
+                &nbsp;&nbsp;&lt;input name="email" value="hacker@evil.com" /&gt;<br/>
+                &lt;/form&gt;<br/>
+                &lt;script&gt;document.forms[0].submit();&lt;/script&gt;
+              </code>
             </div>
           </div>
 
-          <!-- Edit profile form -->
-          <div class="card fade-in">
-            <div class="card-header">
-              <span class="card-title">Edit Profile</span>
-            </div>
-            <form id="profile-form">
-              <div class="form-group">
-                <label for="input-name">Display Name</label>
-                <input type="text" id="input-name" placeholder="Your full name" required />
-              </div>
-              <div class="form-group">
-                <label for="input-email">Email Address</label>
-                <input type="email" id="input-email" placeholder="you@campusconnect.edu" required />
-              </div>
-              <button type="submit" class="btn btn-primary btn-block mt-sm">Save Changes</button>
-            </form>
+          <!-- Sub-mode toggle -->
+          <div class="sub-mode-row">
+            <button class="sub-mode-btn active" id="sub-vuln" onclick="setSubMode('vulnerable')">
+              ⚠️ Vulnerable Mode
+            </button>
+            <button class="sub-mode-btn" id="sub-secure" onclick="setSubMode('secure')">
+              ✅ Secure Mode
+            </button>
           </div>
 
-        </div>
+          <!-- Mode banners -->
+          <div id="vuln-banner" class="mode-banner mode-banner-vuln">
+            <strong>⚠️ VULNERABLE MODE</strong> – No CSRF token. Any forged request is accepted.
+          </div>
+          <div id="secure-banner" class="mode-banner mode-banner-safe" style="display:none;">
+            <strong>✅ SECURE MODE</strong> – CSRF token validated. Forged requests are rejected.
+          </div>
 
-      </div>
-    </div>
-  </div>
+          <div class="grid grid-2 gap-lg">
+
+            <!-- ── Victim form (legitimate request) ── -->
+            <div>
+              <div class="card fade-up">
+                <div class="card-header">
+                  <span class="card-title">👤 Victim's Form (Legitimate Request)</span>
+                </div>
+                <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:1rem;">
+                  This is the normal form the victim uses to update their email.
+                  In secure mode it fetches a CSRF token first.
+                </p>
+
+                <!-- CSRF token display (secure mode only) -->
+                <div id="csrf-token-display" style="display:none;">
+                  <div class="form-group">
+                    <label>CSRF Token (from server session)</label>
+                    <div class="code-block font-mono" id="csrf-token-value" style="font-size:0.7rem; word-break:break-all;">
+                      (click "Get CSRF Token" to generate)
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-ghost btn-block mb-md" id="get-token-btn" onclick="getCsrfToken()">
+                    <span id="token-spinner" class="spinner" style="display:none;"></span>
+                    <span id="token-label">Get CSRF Token</span>
+                  </button>
+                </div>
+
+                <form id="csrf-victim-form">
+                  <div class="form-group">
+                    <label for="csrf-email">New Email Address</label>
+                    <input type="email" id="csrf-email" placeholder="newaddress@campusconnect.edu" required />
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-block mt-sm" id="csrf-submit-btn">
+                    <span id="csrf-spinner" class="spinner" style="display:none;"></span>
+                    <span id="csrf-label">Update Email</span>
+                  </button>
+                </form>
+
+                <!-- Result -->
+                <div id="csrf-victim-result" class="result-panel" style="display:none; margin-top:1rem;">
+                  <div id="csrf-victim-outcome" class="result-outcome"></div>
+                  <div class="result-section">
+                    <div class="result-label">💬 Explanation:</div>
+                    <div id="csrf-victim-explanation" class="result-explanation"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Attacker page simulation ── -->
+            <div>
+              <div class="card fade-up">
+                <div class="card-header">
+                  <span class="card-title">🏴‍☠️ Attacker's Page Simulation</span>
+                </div>
+                <p style="font-size:0.85rem; color:var(--gray-500); margin-bottom:1rem;">
+                  Simulates an attacker's page that auto-submits a forged form.
+                  In vulnerable mode: request succeeds.
+                  In secure mode: request is rejected (missing/invalid CSRF token).
+                </p>
+
+                <!-- Attacker form HTML preview -->
+                <div class="form-group">
+                  <label>Attacker's forged form HTML:</label>
+                  <div class="code-block font-mono" style="font-size:0.72rem;" id="attacker-form-preview"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="attacker-email">Email the attacker wants to inject:</label>
+                  <input type="email" id="attacker-email" value="hacker@evil.com" />
+                </div>
+
+                <button type="button" class="btn btn-danger btn-block mt-sm" id="attacker-btn" onclick="simulateAttack()">
+                  <span id="attacker-spinner" class="spinner" style="display:none;"></span>
+                  <span id="attacker-label">🏴‍☠️ Simulate Forged Request</span>
+                </button>
+
+                <!-- Attacker result -->
+                <div id="attacker-result" class="result-panel" style="display:none; margin-top:1rem;">
+                  <div id="attacker-outcome" class="result-outcome"></div>
+                  <div class="result-section">
+                    <div class="result-label">💬 Explanation:</div>
+                    <div id="attacker-explanation" class="result-explanation"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Link to attacker demo page -->
+              <div class="card fade-up mt-lg" style="background:rgba(239,68,68,0.05); border-color:rgba(239,68,68,0.3);">
+                <div class="card-header">
+                  <span class="card-title">🔗 Standalone Attacker Page</span>
+                </div>
+                <p style="font-size:0.85rem; color:var(--gray-500);">
+                  Open the standalone attacker demo page to see a full CSRF simulation.
+                  Make sure you are logged in first.
+                </p>
+                <a href="/csrf-attacker.html" target="_blank" class="btn btn-danger btn-block mt-sm">
+                  Open Attacker Demo Page ↗
+                </a>
+              </div>
+            </div>
+
+          </div><!-- /grid -->
+
+        </div><!-- /panel-lab -->
+
+      </div><!-- /page-inner -->
+    </div><!-- /main-content -->
+  </div><!-- /layout -->
 
   <script src="/js/common.js"></script>
-  <script src="/js/settings.js"></script>
+  <script>
+    /**
+     * settings.html – inline JavaScript
+     *
+     * Handles:
+     *  1. Normal settings: load profile, update name, update email, change password
+     *  2. CSRF demo:
+     *     - VULNERABLE mode: POST to /api/settings/email-vuln (no CSRF check)
+     *     - SECURE mode: fetch CSRF token, POST to /api/settings/email-safe (token required)
+     *     - Attacker simulation: POST forged request (no token) to either endpoint
+     */
+
+    let currentMode    = 'normal';
+    let currentSubMode = 'vulnerable';
+    let csrfToken      = null;
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (!user) return;
+      buildSidebar(user);
+      await loadProfile();
+      updateAttackerFormPreview();
+    });
+
+    // ── Mode switching ───────────────────────────────────────────────────────
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('panel-normal').style.display = (mode === 'normal') ? '' : 'none';
+      document.getElementById('panel-lab').style.display    = (mode === 'lab')    ? '' : 'none';
+      document.getElementById('tab-normal').classList.toggle('active', mode === 'normal');
+      document.getElementById('tab-lab').classList.toggle('active',    mode === 'lab');
+    }
+
+    function setSubMode(sub) {
+      currentSubMode = sub;
+      document.getElementById('sub-vuln').classList.toggle('active',   sub === 'vulnerable');
+      document.getElementById('sub-secure').classList.toggle('active',  sub === 'secure');
+      document.getElementById('vuln-banner').style.display   = (sub === 'vulnerable') ? '' : 'none';
+      document.getElementById('secure-banner').style.display = (sub === 'secure')     ? '' : 'none';
+
+      // Show/hide CSRF token section in secure mode
+      document.getElementById('csrf-token-display').style.display = (sub === 'secure') ? '' : 'none';
+
+      // Reset results
+      document.getElementById('csrf-victim-result').style.display  = 'none';
+      document.getElementById('attacker-result').style.display     = 'none';
+      csrfToken = null;
+      document.getElementById('csrf-token-value').textContent = '(click "Get CSRF Token" to generate)';
+
+      updateAttackerFormPreview();
+    }
+
+    // ── Load profile ─────────────────────────────────────────────────────────
+    async function loadProfile() {
+      let profile = null;
+      try {
+        const data = await apiFetch('/api/settings/profile');
+        if (data.success) profile = data.profile;
+      } catch (e) {}
+
+      if (!profile) {
+        const m = MOCK_DATA.profile;
+        profile = { full_name: m.name, username: m.enrollment, email: m.email,
+                    department: m.department, year: m.year, gpa: m.gpa,
+                    enrollment: m.enrollment };
+      }
+
+      const initials = (profile.full_name || '?').charAt(0).toUpperCase();
+      const enroll   = profile.enrollment || profile.username || '—';
+      document.getElementById('settings-avatar').textContent   = initials;
+      document.getElementById('settings-fullname').textContent = profile.full_name || '—';
+      document.getElementById('settings-id-email').textContent = `${enroll} · ${profile.email || '—'}`;
+      document.getElementById('settings-dept').textContent     = profile.department || '—';
+      document.getElementById('settings-year').textContent     = profile.year ? `Year ${profile.year}` : '—';
+      document.getElementById('settings-gpa').textContent      = profile.gpa  ? `GPA ${parseFloat(profile.gpa).toFixed(2)}` : '—';
+      document.getElementById('detail-name').textContent       = profile.full_name  || '—';
+      document.getElementById('detail-enrollment').textContent = enroll;
+      document.getElementById('detail-email').textContent      = profile.email      || '—';
+      document.getElementById('detail-dept').textContent       = profile.department || '—';
+      document.getElementById('input-name').value              = profile.full_name  || '';
+      document.getElementById('input-email').value             = profile.email      || '';
+    }
+
+    // ── Normal forms ─────────────────────────────────────────────────────────
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const full_name = document.getElementById('input-name').value.trim();
+      if (!full_name) { showSettingsAlert('⚠️ Name cannot be empty.', 'warning'); return; }
+      setBtn('save-profile-btn', 'save-profile-spinner', 'save-profile-label', true, 'Saving…');
+      try {
+        const data = await apiFetch('/api/settings/update-profile', { method: 'POST', body: JSON.stringify({ full_name }) });
+        if (data.success) {
+          document.getElementById('detail-name').textContent       = full_name;
+          document.getElementById('settings-fullname').textContent = full_name;
+          document.getElementById('settings-avatar').textContent   = full_name.charAt(0).toUpperCase();
+          showSettingsAlert('✅ Profile updated!', 'success');
+        } else { showSettingsAlert('❌ ' + (data.message || 'Update failed.'), 'error'); }
+      } catch (e) { showSettingsAlert('✅ Profile updated! (demo mode)', 'success'); }
+      setBtn('save-profile-btn', 'save-profile-spinner', 'save-profile-label', false, 'Save Changes');
+    });
+
+    document.getElementById('email-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('input-email').value.trim();
+      if (!email || !email.includes('@')) { showSettingsAlert('⚠️ Enter a valid email.', 'warning'); return; }
+      setBtn('update-email-btn', 'update-email-spinner', 'update-email-label', true, 'Updating…');
+      try {
+        const data = await apiFetch('/api/settings/update-email', { method: 'POST', body: JSON.stringify({ email }) });
+        if (data.success) {
+          document.getElementById('detail-email').textContent = email;
+          showSettingsAlert('✅ Email updated!', 'success');
+        } else { showSettingsAlert('❌ ' + (data.message || 'Update failed.'), 'error'); }
+      } catch (e) { showSettingsAlert('✅ Email updated! (demo mode)', 'success'); }
+      setBtn('update-email-btn', 'update-email-spinner', 'update-email-label', false, 'Update Email');
+    });
+
+    document.getElementById('password-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const current = document.getElementById('input-current-pwd').value;
+      const newPwd  = document.getElementById('input-new-pwd').value;
+      if (!current || !newPwd) { showSettingsAlert('⚠️ Fill in both fields.', 'warning'); return; }
+      if (newPwd.length < 6)   { showSettingsAlert('⚠️ Password must be ≥ 6 characters.', 'warning'); return; }
+      setBtn('change-pwd-btn', 'pwd-spinner', 'pwd-label', true, 'Updating…');
+      try {
+        const data = await apiFetch('/api/settings/change-password', { method: 'POST', body: JSON.stringify({ current_password: current, new_password: newPwd }) });
+        if (data.success) {
+          document.getElementById('input-current-pwd').value = '';
+          document.getElementById('input-new-pwd').value     = '';
+          showSettingsAlert('✅ Password changed!', 'success');
+        } else { showSettingsAlert('❌ ' + (data.message || 'Error.'), 'error'); }
+      } catch (e) { showSettingsAlert('❌ Could not connect to server.', 'error'); }
+      setBtn('change-pwd-btn', 'pwd-spinner', 'pwd-label', false, 'Change Password');
+    });
+
+    // ── CSRF Demo: Get token ──────────────────────────────────────────────────
+    async function getCsrfToken() {
+      setBtn('get-token-btn', 'token-spinner', 'token-label', true, 'Fetching…');
+      try {
+        const data = await apiFetch('/api/settings/csrf-token');
+        if (data.success) {
+          csrfToken = data.csrfToken;
+          document.getElementById('csrf-token-value').textContent = csrfToken;
+          showSettingsAlert('✅ CSRF token generated and stored in session.', 'success');
+        }
+      } catch (e) {
+        showSettingsAlert('❌ Could not fetch CSRF token. Is the backend running?', 'error');
+      }
+      setBtn('get-token-btn', 'token-spinner', 'token-label', false, 'Get CSRF Token');
+    }
+
+    // ── CSRF Demo: Victim form submit ─────────────────────────────────────────
+    document.getElementById('csrf-victim-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('csrf-email').value.trim();
+      if (!email || !email.includes('@')) {
+        showSettingsAlert('⚠️ Enter a valid email.', 'warning'); return;
+      }
+
+      setBtn('csrf-submit-btn', 'csrf-spinner', 'csrf-label', true, 'Submitting…');
+
+      let endpoint, body;
+      if (currentSubMode === 'vulnerable') {
+        // VULNERABLE: no CSRF token sent
+        endpoint = '/api/settings/email-vuln';
+        body     = JSON.stringify({ email });
+      } else {
+        // SECURE: include the CSRF token
+        if (!csrfToken) {
+          showSettingsAlert('⚠️ Please get a CSRF token first (click "Get CSRF Token").', 'warning');
+          setBtn('csrf-submit-btn', 'csrf-spinner', 'csrf-label', false, 'Update Email');
+          return;
+        }
+        endpoint = '/api/settings/email-safe';
+        body     = JSON.stringify({ email, csrf_token: csrfToken });
+      }
+
+      try {
+        const data = await apiFetch(endpoint, { method: 'POST', body });
+        const result = document.getElementById('csrf-victim-result');
+        result.style.display = '';
+        const outcome = document.getElementById('csrf-victim-outcome');
+        outcome.className = `result-outcome ${data.success ? 'outcome-success' : 'outcome-blocked'}`;
+        outcome.textContent = data.message || (data.success ? '✅ Email updated.' : '❌ Rejected.');
+        document.getElementById('csrf-victim-explanation').textContent = data.explanation || '';
+
+        // Update displayed email if successful
+        if (data.success && data.newEmail) {
+          document.getElementById('detail-email').textContent      = data.newEmail;
+          document.getElementById('settings-id-email').textContent = `— · ${data.newEmail}`;
+        }
+        // Rotate token display after use in secure mode
+        if (currentSubMode === 'secure' && data.success) {
+          csrfToken = null;
+          document.getElementById('csrf-token-value').textContent = '(used — click "Get CSRF Token" for a new one)';
+        }
+      } catch (err) {
+        showSettingsAlert('❌ Could not connect to server. Is the backend running?', 'error');
+      }
+
+      setBtn('csrf-submit-btn', 'csrf-spinner', 'csrf-label', false, 'Update Email');
+    });
+
+    // ── CSRF Demo: Attacker simulation ────────────────────────────────────────
+    async function simulateAttack() {
+      const attackerEmail = document.getElementById('attacker-email').value.trim() || 'hacker@evil.com';
+      const endpoint = currentSubMode === 'vulnerable'
+        ? '/api/settings/email-vuln'
+        : '/api/settings/email-safe';
+
+      // Update form preview
+      updateAttackerFormPreview();
+
+      setBtn('attacker-btn', 'attacker-spinner', 'attacker-label', true, 'Sending forged request…');
+
+      try {
+        // ⚠️  Forged request: does NOT include a CSRF token (like a real attacker's page)
+        const data = await apiFetch(endpoint, {
+          method: 'POST',
+          body:   JSON.stringify({ email: attackerEmail })  // No csrf_token!
+        });
+
+        const result  = document.getElementById('attacker-result');
+        result.style.display = '';
+        const outcome = document.getElementById('attacker-outcome');
+
+        if (data.success) {
+          // Vulnerable: request was accepted!
+          outcome.className  = 'result-outcome outcome-success';
+          outcome.textContent = `⚠️ FORGED REQUEST SUCCEEDED! Email changed to "${data.newEmail}"`;
+        } else {
+          // Secure: request was rejected!
+          outcome.className   = 'result-outcome outcome-blocked';
+          outcome.textContent = `✅ FORGED REQUEST BLOCKED! ${data.message}`;
+        }
+        document.getElementById('attacker-explanation').textContent = data.explanation || '';
+      } catch (err) {
+        showSettingsAlert('❌ Could not connect to server.', 'error');
+      }
+
+      setBtn('attacker-btn', 'attacker-spinner', 'attacker-label', false, '🏴‍☠️ Simulate Forged Request');
+    }
+
+    // ── Attacker form HTML preview ────────────────────────────────────────────
+    function updateAttackerFormPreview() {
+      const attackerEmail = (document.getElementById('attacker-email') || {}).value || 'hacker@evil.com';
+      const endpoint = currentSubMode === 'vulnerable'
+        ? '/api/settings/email-vuln'
+        : '/api/settings/email-safe';
+
+      document.getElementById('attacker-form-preview').textContent =
+        `<!-- Attacker's page on evil.com -->\n`
+      + `<form action="http://localhost:3000${endpoint}"\n`
+      + `      method="POST">\n`
+      + `  <input name="email" value="${attackerEmail}" />\n`
+      + `  <!-- No CSRF token! -->\n`
+      + `</form>\n`
+      + `<script>document.forms[0].submit();</script>`;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function showSettingsAlert(msg, type) {
+      const el = document.getElementById('settings-alert');
+      const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+      el.className = `alert alert-${type} fade-up`;
+      el.textContent = (icons[type] || '') + ' ' + msg;
+      if (type === 'success') setTimeout(() => { el.className = 'alert'; el.textContent = ''; }, 4000);
+    }
+
+    function setBtn(btnId, spinnerId, labelId, on, text) {
+      document.getElementById(btnId).disabled            = on;
+      document.getElementById(spinnerId).style.display   = on ? 'inline-block' : 'none';
+      document.getElementById(labelId).textContent       = on ? text : document.getElementById(labelId).dataset.default || labelId.replace(/-/g,' ');
+    }
+
+    // Keep attacker form preview up to date as user types
+    document.addEventListener('DOMContentLoaded', () => {
+      const emailEl = document.getElementById('attacker-email');
+      if (emailEl) emailEl.addEventListener('input', updateAttackerFormPreview);
+    });
+  </script>
 </body>
 </html>

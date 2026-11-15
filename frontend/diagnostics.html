@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Diagnostics – CampusConnect</title>
-  <meta name="description" content="Server diagnostics and audit log for CampusConnect." />
+  <title>Network Diagnostics – CampusConnect</title>
+  <meta name="description" content="Campus network diagnostics and connectivity check tool." />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -14,100 +14,339 @@
     <div class="main-content">
       <header class="topbar">
         <div class="topbar-left">
-          <div class="topbar-breadcrumb">CampusConnect / <span>Diagnostics</span></div>
+          <div class="topbar-breadcrumb">CampusConnect / <span>Network Diagnostics</span></div>
+        </div>
+        <div class="topbar-right">
+          <span class="badge badge-green" style="font-size:0.72rem;">🟢 Network OK</span>
         </div>
       </header>
 
       <div class="page-inner">
 
-        <div class="page-header fade-in">
-          <h1>🖥️ Server Diagnostics</h1>
-          <p>Live server status and full audit log of all user actions.</p>
+        <!-- Page header -->
+        <div class="page-header fade-up">
+          <h1>🌐 Network Diagnostics</h1>
+          <p>Check campus network connectivity. This module also demonstrates OS Command Injection – In-band.</p>
         </div>
 
-        <div id="status-alert" class="alert"></div>
-
-        <!-- Server status cards -->
-        <div class="grid grid-3 mb-lg">
-
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(16,185,129,0.15);">🟢</div>
-            <div class="stat-info">
-              <div class="stat-value text-sm" id="status-server">—</div>
-              <div class="stat-label">Server Version</div>
-            </div>
-          </div>
-
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(99,102,241,0.15);">⏱️</div>
-            <div class="stat-info">
-              <div class="stat-value text-sm" id="status-uptime">—</div>
-              <div class="stat-label">Uptime</div>
-            </div>
-          </div>
-
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(245,158,11,0.15);">💾</div>
-            <div class="stat-info">
-              <div class="stat-value text-sm" id="status-memory">—</div>
-              <div class="stat-label">Memory Usage</div>
-            </div>
-          </div>
-
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(34,211,238,0.15);">⚙️</div>
-            <div class="stat-info">
-              <div class="stat-value text-sm" id="status-node">—</div>
-              <div class="stat-label">Node.js Version</div>
-            </div>
-          </div>
-
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(99,102,241,0.15);">🖥️</div>
-            <div class="stat-info">
-              <div class="stat-value text-sm" id="status-platform">—</div>
-              <div class="stat-label">Platform</div>
-            </div>
-          </div>
-
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(16,185,129,0.15);">🕐</div>
-            <div class="stat-info">
-              <div class="stat-value text-xs" id="status-time">—</div>
-              <div class="stat-label">Server Time</div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Audit log table -->
-        <div class="card fade-in">
-          <div class="card-header">
-            <span class="card-title">Audit Log (Last 20 Actions)</span>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>User</th>
-                  <th>Action</th>
-                  <th>Target</th>
-                  <th>Timestamp</th>
-                </tr>
-              </thead>
-              <tbody id="log-tbody">
-                <tr><td colspan="5" class="text-center text-muted">Loading…</td></tr>
-              </tbody>
-            </table>
+        <!-- ══ MODE SELECTOR ═════════════════════════════════════════════ -->
+        <div class="lab-mode-selector fade-up">
+          <div class="lab-mode-label">🔬 Lab Mode:</div>
+          <div class="lab-mode-tabs">
+            <button class="lab-tab active" id="tab-normal" onclick="setMode('normal')">
+              🖥️ Normal Diagnostics
+            </button>
+            <button class="lab-tab" id="tab-lab" onclick="setMode('lab')">
+              💉 Command Injection Lab
+            </button>
           </div>
         </div>
 
-      </div>
-    </div>
-  </div>
+        <!-- ══ NORMAL DIAGNOSTICS PANEL ══════════════════════════════════ -->
+        <div id="panel-normal">
+
+          <!-- Server status cards -->
+          <div class="grid grid-3 mb-lg" aria-label="System status">
+            <div class="stat-card fade-up">
+              <div class="stat-icon" style="background:rgba(16,185,129,0.12);">🟢</div>
+              <div>
+                <div class="stat-value text-sm" id="status-server">CampusConnect v1.0</div>
+                <div class="stat-label">Server Version</div>
+              </div>
+            </div>
+            <div class="stat-card fade-up">
+              <div class="stat-icon" style="background:rgba(37,99,235,0.12);">⏱️</div>
+              <div>
+                <div class="stat-value text-sm" id="status-uptime">—</div>
+                <div class="stat-label">Server Uptime</div>
+              </div>
+            </div>
+            <div class="stat-card fade-up">
+              <div class="stat-icon" style="background:rgba(245,158,11,0.12);">💾</div>
+              <div>
+                <div class="stat-value text-sm" id="status-memory">—</div>
+                <div class="stat-label">Memory Usage</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Normal ping tool -->
+          <div class="card fade-up">
+            <div class="card-header">
+              <span class="card-title">🔌 Connectivity Check</span>
+              <span class="badge badge-blue" style="font-size:0.68rem;">SAFE MODE</span>
+            </div>
+            <form id="normal-ping-form">
+              <div class="flex gap-md items-center mb-md" style="flex-wrap:wrap;">
+                <div class="input-group" style="flex:1; min-width:220px;">
+                  <span class="input-icon">🖥️</span>
+                  <input type="text" id="normal-host"
+                         placeholder="e.g. campusconnect.edu, 127.0.0.1"
+                         autocomplete="off" />
+                </div>
+                <button type="submit" class="btn btn-primary" id="normal-ping-btn">
+                  <span id="normal-ping-spinner" class="spinner" style="display:none;"></span>
+                  <span>Check</span>
+                </button>
+              </div>
+            </form>
+            <div class="terminal-box" id="normal-terminal">
+              <div class="terminal-line terminal-dim">$ Ready — enter a hostname and click Check</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ COMMAND INJECTION LAB PANEL ════════════════════════════════ -->
+        <div id="panel-lab" style="display:none;">
+
+          <!-- Explanation -->
+          <div class="vuln-info-box fade-up">
+            <div class="vuln-info-title">💉 Module 3 – OS Command Injection: In-Band</div>
+            <p>
+              In a vulnerable diagnostics tool, user input is embedded directly in a shell command string.
+              <code>child_process.exec()</code> passes the full string to the system shell, which interprets
+              special characters like <code>&amp;</code> <code>|</code> <code>;</code> as command separators.
+            </p>
+            <p>
+              An attacker can append extra commands after the hostname and they will execute on the server.
+            </p>
+            <div class="vuln-payload-box">
+              <strong>Example payloads (Windows):</strong><br/>
+              <code>127.0.0.1 &amp; whoami</code> — runs <em>whoami</em> after ping<br/>
+              <code>127.0.0.1 &amp; hostname</code> — reveals the server hostname<br/>
+              <code>127.0.0.1 &amp; echo hacked</code> — echoes custom text<br/>
+              <strong>Linux:</strong> <code>127.0.0.1; whoami</code> or <code>127.0.0.1; hostname</code>
+            </div>
+            <p class="vuln-safety-note">
+              🔒 <strong>Safety note:</strong> This demo blocks genuinely destructive commands
+              (rm, del, format, shutdown, etc.). Only harmless built-ins are allowed.
+            </p>
+          </div>
+
+          <!-- Sub-mode toggle -->
+          <div class="sub-mode-row">
+            <button class="sub-mode-btn active" id="sub-vuln" onclick="setSubMode('vulnerable')">
+              ⚠️ Vulnerable Mode
+            </button>
+            <button class="sub-mode-btn" id="sub-secure" onclick="setSubMode('secure')">
+              ✅ Secure Mode
+            </button>
+          </div>
+
+          <!-- Banners -->
+          <div id="vuln-banner" class="mode-banner mode-banner-vuln">
+            <strong>⚠️ VULNERABLE MODE</strong> – Uses <code>exec(command_string)</code>. Shell metacharacters are interpreted.
+          </div>
+          <div id="secure-banner" class="mode-banner mode-banner-safe" style="display:none;">
+            <strong>✅ SECURE MODE</strong> – Uses <code>execFile(program, [args])</code>. No shell spawned. Input validated with allowlist regex.
+          </div>
+
+          <!-- Ping form -->
+          <div class="card fade-up">
+            <div class="card-header">
+              <span class="card-title">🔌 Hostname Input</span>
+            </div>
+            <form id="inject-form">
+              <div class="form-group">
+                <label for="inject-host">Hostname / Injection Payload</label>
+                <input type="text" id="inject-host"
+                       placeholder="e.g. 127.0.0.1    or    127.0.0.1 &amp; whoami"
+                       autocomplete="off" style="font-family: monospace;" />
+              </div>
+
+              <!-- Quick payload buttons -->
+              <div class="payload-row">
+                <span class="payload-label">Quick payloads:</span>
+                <button type="button" class="payload-btn" onclick="setPayload('127.0.0.1')">
+                  Normal: 127.0.0.1
+                </button>
+                <button type="button" class="payload-btn" onclick="setPayload('127.0.0.1 &amp; whoami')">
+                  &amp; whoami (Windows)
+                </button>
+                <button type="button" class="payload-btn" onclick="setPayload('127.0.0.1 &amp; hostname')">
+                  &amp; hostname
+                </button>
+                <button type="button" class="payload-btn" onclick="setPayload('127.0.0.1 &amp; echo Injected!')">
+                  &amp; echo
+                </button>
+                <button type="button" class="payload-btn" onclick="setPayload('127.0.0.1; whoami')">
+                  ; whoami (Linux)
+                </button>
+              </div>
+
+              <button type="submit" class="btn btn-primary mt-sm" id="inject-btn">
+                <span id="inject-spinner" class="spinner" style="display:none;"></span>
+                <span id="inject-label">Run</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Result terminal -->
+          <div id="inject-result" style="display:none; margin-top:1rem;">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">📟 Command Output</span>
+              </div>
+              <div class="result-section">
+                <div class="result-label">🗄️ Constructed Command:</div>
+                <pre id="inject-cmd" class="code-block"></pre>
+              </div>
+              <div class="result-section">
+                <div class="result-label">📺 Output:</div>
+                <div class="terminal-box">
+                  <pre id="inject-output" class="terminal-pre"></pre>
+                </div>
+              </div>
+              <div class="result-section">
+                <div class="result-label">💬 Explanation:</div>
+                <div id="inject-explanation" class="result-explanation"></div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /panel-lab -->
+
+      </div><!-- /page-inner -->
+    </div><!-- /main-content -->
+  </div><!-- /layout -->
 
   <script src="/js/common.js"></script>
-  <script src="/js/diagnostics.js"></script>
+  <script>
+    /**
+     * diagnostics.html – inline JavaScript
+     *
+     * Handles:
+     *  1. Normal diagnostics: server status + simulated ping
+     *  2. Command Injection demo: vulnerable exec() vs secure execFile()
+     */
+
+    let currentSubMode = 'vulnerable';
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (!user) return;
+      buildSidebar(user);
+      loadStatus();
+    });
+
+    // ── Mode switching ───────────────────────────────────────────────────────
+    function setMode(mode) {
+      document.getElementById('panel-normal').style.display = (mode === 'normal') ? '' : 'none';
+      document.getElementById('panel-lab').style.display    = (mode === 'lab')    ? '' : 'none';
+      document.getElementById('tab-normal').classList.toggle('active', mode === 'normal');
+      document.getElementById('tab-lab').classList.toggle('active',    mode === 'lab');
+    }
+
+    function setSubMode(sub) {
+      currentSubMode = sub;
+      document.getElementById('sub-vuln').classList.toggle('active',   sub === 'vulnerable');
+      document.getElementById('sub-secure').classList.toggle('active',  sub === 'secure');
+      document.getElementById('vuln-banner').style.display   = (sub === 'vulnerable') ? '' : 'none';
+      document.getElementById('secure-banner').style.display = (sub === 'secure')     ? '' : 'none';
+      document.getElementById('inject-result').style.display = 'none';
+    }
+
+    function setPayload(text) {
+      document.getElementById('inject-host').value = text;
+    }
+
+    // ── Load server status ───────────────────────────────────────────────────
+    async function loadStatus() {
+      try {
+        const data = await apiFetch('/api/diagnostics/status');
+        if (data.success) {
+          document.getElementById('status-server').textContent = data.status.server;
+          document.getElementById('status-uptime').textContent = data.status.uptime;
+          document.getElementById('status-memory').textContent = data.status.memory;
+        }
+      } catch (e) {
+        document.getElementById('status-uptime').textContent = 'Backend offline';
+      }
+    }
+
+    // ── Normal ping form ─────────────────────────────────────────────────────
+    document.getElementById('normal-ping-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const host = document.getElementById('normal-host').value.trim();
+      if (!host) return;
+
+      const terminal = document.getElementById('normal-terminal');
+      terminal.innerHTML = `<div class="terminal-line">$ ping ${escHtml(host)}</div><div class="terminal-line terminal-dim">Checking…</div>`;
+      document.getElementById('normal-ping-btn').disabled = true;
+
+      try {
+        // Try the secure ping endpoint
+        const data = await apiFetch('/api/diagnostics/ping-safe', {
+          method: 'POST',
+          body:   JSON.stringify({ host })
+        });
+        const lines = (data.output || '').split('\n');
+        terminal.innerHTML = lines.map(l =>
+          `<div class="terminal-line">${escHtml(l)}</div>`
+        ).join('');
+      } catch (e) {
+        // Simulated output if backend is not running
+        const latency = Math.floor(Math.random() * 40) + 5;
+        const sim = [
+          `PING ${host}: 56 data bytes`,
+          `64 bytes from ${host}: icmp_seq=0 time=${latency}.2 ms`,
+          `64 bytes from ${host}: icmp_seq=1 time=${latency + 1}.8 ms`,
+          `64 bytes from ${host}: icmp_seq=2 time=${latency}.9 ms`,
+          ``,
+          `--- ${host} ping statistics ---`,
+          `3 packets transmitted, 3 received, 0% packet loss`
+        ];
+        terminal.innerHTML = sim.map(l =>
+          `<div class="terminal-line">${escHtml(l)}</div>`
+        ).join('');
+      }
+
+      document.getElementById('normal-ping-btn').disabled = false;
+    });
+
+    // ── Command Injection demo form ──────────────────────────────────────────
+    document.getElementById('inject-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const host     = document.getElementById('inject-host').value;
+      const endpoint = currentSubMode === 'vulnerable'
+        ? '/api/diagnostics/ping-vuln'
+        : '/api/diagnostics/ping-safe';
+
+      document.getElementById('inject-btn').disabled = true;
+      document.getElementById('inject-spinner').style.display = 'inline-block';
+      document.getElementById('inject-label').textContent = 'Running…';
+
+      try {
+        const data = await apiFetch(endpoint, {
+          method: 'POST',
+          body:   JSON.stringify({ host })
+        });
+        displayInjectResult(data);
+      } catch (err) {
+        alert('Could not connect to server. Is the backend running?');
+      }
+
+      document.getElementById('inject-btn').disabled = false;
+      document.getElementById('inject-spinner').style.display = 'none';
+      document.getElementById('inject-label').textContent = 'Run';
+    });
+
+    function displayInjectResult(data) {
+      document.getElementById('inject-result').style.display = '';
+      document.getElementById('inject-cmd').textContent        = data.constructedCmd || '—';
+      document.getElementById('inject-output').textContent     = data.output         || '(no output)';
+      document.getElementById('inject-explanation').textContent = data.explanation   || '';
+    }
+
+    // Escape HTML to avoid XSS in our own output rendering
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
 </body>
 </html>

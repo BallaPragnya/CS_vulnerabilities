@@ -3,74 +3,341 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login – CampusConnect</title>
-  <meta name="description" content="Sign in to CampusConnect, the university student portal." />
+  <title>Student Login – CampusConnect</title>
+  <meta name="description" content="Login to CampusConnect – University Student Portal" />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body>
+<body class="login-page">
 
-  <!-- Login page has no sidebar – it's a standalone centred card -->
-  <div class="login-page">
-    <div class="login-card">
+  <div class="login-wrapper">
 
-      <!-- Logo -->
-      <div class="login-logo">
-        <div class="logo-mark">🎓</div>
-        <div>
-          <div class="logo-name">CampusConnect</div>
-          <div class="logo-tagline">University Student Portal</div>
+    <!-- ══ Left Panel: Branding ═══════════════════════════════════════════ -->
+    <div class="login-brand">
+      <div class="login-brand-logo">🎓</div>
+      <div class="login-brand-name">CampusConnect</div>
+      <div class="login-brand-sub">University Student Portal</div>
+      <div class="login-brand-desc">
+        Your one-stop portal for academics, campus updates, and student services.
+      </div>
+      <!-- Security lab badge -->
+      <div class="login-lab-badge">
+        🔒 Web Server Security Lab
+      </div>
+    </div>
+
+    <!-- ══ Right Panel: Login Form ════════════════════════════════════════ -->
+    <div class="login-form-panel">
+
+      <div class="login-card">
+        <h1 class="login-title">Student Login</h1>
+        <p class="login-sub">Enter your credentials to access the portal.</p>
+
+        <!-- Alert box -->
+        <div id="login-alert" class="alert" role="alert" aria-live="polite"></div>
+
+        <!-- ── MODE SELECTOR ─────────────────────────────────────────── -->
+        <!-- Toggle between Normal Login and Security Lab (SQL Injection demo) -->
+        <div class="mode-tabs" id="mode-tabs">
+          <button class="mode-tab active" id="tab-normal" onclick="setMode('normal')">
+            🔐 Normal Login
+          </button>
+          <button class="mode-tab" id="tab-lab" onclick="setMode('lab')">
+            ⚠️ Security Lab
+          </button>
+        </div>
+
+        <!-- ── NORMAL LOGIN FORM ──────────────────────────────────────── -->
+        <div id="panel-normal">
+          <form id="login-form" novalidate>
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" placeholder="e.g. alice"
+                     autocomplete="username" required />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" placeholder="Enter password"
+                     autocomplete="current-password" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block mt-sm" id="login-btn">
+              <span id="login-spinner" class="spinner" style="display:none;"></span>
+              <span id="login-label">Login</span>
+            </button>
+          </form>
+
+          <!-- Demo credentials hint -->
+          <div class="login-hint">
+            <strong>Demo accounts:</strong><br/>
+            alice / alice123 &nbsp;·&nbsp; admin / admin123 &nbsp;·&nbsp; teacher / teacher123
+          </div>
+        </div>
+
+        <!-- ── SECURITY LAB: SQL INJECTION DEMO ──────────────────────── -->
+        <div id="panel-lab" style="display:none;">
+
+          <!-- Explanation banner -->
+          <div class="vuln-info-box">
+            <div class="vuln-info-title">💉 Module 1 – SQL Injection: Authentication Bypass</div>
+            <p>
+              In a vulnerable login form, user input is embedded directly into the SQL query string.
+              An attacker can break out of the string with a single quote and append extra SQL logic
+              that makes the WHERE clause always evaluate to TRUE — bypassing the password check entirely.
+            </p>
+            <p><strong>Demo table:</strong> Uses an isolated <code>sqli_demo_users</code> table with plain-text passwords.
+            It is completely separate from the real login system.</p>
+          </div>
+
+          <!-- Sub-mode toggle: Vulnerable vs Secure -->
+          <div class="sub-mode-row">
+            <button class="sub-mode-btn active" id="sub-vuln" onclick="setSubMode('vulnerable')">
+              ⚠️ Vulnerable Mode
+            </button>
+            <button class="sub-mode-btn" id="sub-secure" onclick="setSubMode('secure')">
+              ✅ Secure Mode
+            </button>
+          </div>
+
+          <!-- Vulnerable mode banner -->
+          <div id="vuln-banner" class="mode-banner mode-banner-vuln">
+            <strong>⚠️ VULNERABLE MODE</strong> – Input is pasted directly into the SQL string (no parameterisation).
+          </div>
+          <!-- Secure mode banner -->
+          <div id="secure-banner" class="mode-banner mode-banner-safe" style="display:none;">
+            <strong>✅ SECURE MODE</strong> – Input is bound via a parameterised query (? placeholder).
+          </div>
+
+          <!-- The injection form -->
+          <form id="sqli-form" novalidate>
+            <div class="form-group">
+              <label for="sqli-username">Username</label>
+              <input type="text" id="sqli-username" placeholder="Try:  ' OR '1'='1' --"
+                     autocomplete="off" />
+              <div class="form-hint">Normal value: <code>demouser</code></div>
+            </div>
+            <div class="form-group">
+              <label for="sqli-password">Password</label>
+              <input type="text" id="sqli-password" placeholder="Try any value (or leave blank)"
+                     autocomplete="off" />
+              <div class="form-hint">Normal value: <code>demopass</code></div>
+            </div>
+
+            <!-- Payload shortcut buttons -->
+            <div class="payload-row">
+              <span class="payload-label">Quick payloads:</span>
+              <button type="button" class="payload-btn"
+                      onclick="setPayload(&quot;' OR '1'='1' --&quot;, &quot;anything&quot;)">
+                Classic bypass
+              </button>
+              <button type="button" class="payload-btn"
+                      onclick="setPayload(&quot;' OR 1=1 --&quot;, &quot;x&quot;)">
+                OR 1=1
+              </button>
+              <button type="button" class="payload-btn"
+                      onclick="setPayload('demouser', 'demopass')">
+                Valid credentials
+              </button>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block mt-sm" id="sqli-btn">
+              <span id="sqli-spinner" class="spinner" style="display:none;"></span>
+              <span id="sqli-label">Run Demo</span>
+            </button>
+          </form>
+
+          <!-- Results panel -->
+          <div id="sqli-result" class="result-panel" style="display:none;">
+            <div class="result-section">
+              <div class="result-label">🗄️ Constructed SQL Query:</div>
+              <pre id="sqli-sql" class="code-block"></pre>
+            </div>
+            <div class="result-section">
+              <div class="result-label">📊 Result:</div>
+              <div id="sqli-outcome" class="result-outcome"></div>
+            </div>
+            <div class="result-section">
+              <div class="result-label">💬 Explanation:</div>
+              <div id="sqli-explanation" class="result-explanation"></div>
+            </div>
+          </div>
+
+          <!-- Demo accounts reference -->
+          <div class="login-hint" style="margin-top:1rem;">
+            <strong>Demo table accounts:</strong><br/>
+            demouser / demopass &nbsp;·&nbsp; demoadmin / adminpass &nbsp;·&nbsp; alice_lab / labpass123
+          </div>
+        </div>
+
+        <!-- Footer link -->
+        <div class="login-footer">
+          <span>Don't have an account?</span>
+          <a href="/register.html">Register here</a>
         </div>
       </div>
 
-      <h2>Sign In</h2>
-      <p class="subtitle">Enter your credentials to access the portal.</p>
+    </div><!-- /login-form-panel -->
+  </div><!-- /login-wrapper -->
 
-      <!-- Alert box (shown on login error or success) -->
-      <div id="alert-box" class="alert" role="alert"></div>
+  <script>
+    /**
+     * login.html – inline JavaScript
+     *
+     * Handles:
+     *  1. Normal login → POST /api/auth/login
+     *  2. SQL Injection demo → POST /api/sqli-demo/login (vulnerable or secure mode)
+     */
 
-      <!-- Login form -->
-      <form id="login-form" novalidate>
+    // ── Current state ────────────────────────────────────────────────────────
+    let currentMode    = 'normal';     // 'normal' | 'lab'
+    let currentSubMode = 'vulnerable'; // 'vulnerable' | 'secure'
 
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            placeholder="e.g. admin"
-            autocomplete="username"
-            required
-          />
-        </div>
+    // ── Mode switching ───────────────────────────────────────────────────────
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            required
-          />
-        </div>
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('panel-normal').style.display = (mode === 'normal') ? '' : 'none';
+      document.getElementById('panel-lab').style.display    = (mode === 'lab')    ? '' : 'none';
+      document.getElementById('tab-normal').classList.toggle('active', mode === 'normal');
+      document.getElementById('tab-lab').classList.toggle('active',    mode === 'lab');
+      clearAlert();
+    }
 
-        <button type="submit" id="submit-btn" class="btn btn-primary btn-block btn-lg mt-md">
-          <span id="btn-spinner" style="display:none;">⏳</span>
-          <span id="btn-text">Sign In</span>
-        </button>
+    function setSubMode(sub) {
+      currentSubMode = sub;
+      document.getElementById('sub-vuln').classList.toggle('active',   sub === 'vulnerable');
+      document.getElementById('sub-secure').classList.toggle('active',  sub === 'secure');
+      document.getElementById('vuln-banner').style.display   = (sub === 'vulnerable') ? '' : 'none';
+      document.getElementById('secure-banner').style.display = (sub === 'secure')     ? '' : 'none';
+      document.getElementById('sqli-result').style.display   = 'none';
+    }
 
-      </form>
+    // ── Payload shortcut ─────────────────────────────────────────────────────
+    function setPayload(username, password) {
+      document.getElementById('sqli-username').value = username;
+      document.getElementById('sqli-password').value = password;
+    }
 
-      <!-- Sample credentials hint for the lab -->
-      <hr class="divider" />
-      <p class="text-center text-xs text-dim">
-        Lab credentials: <code>admin/admin123</code> · <code>teacher/teacher123</code> · <code>alice/alice123</code>
-      </p>
+    // ── Normal login form ────────────────────────────────────────────────────
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
 
-    </div>
-  </div>
+      if (!username || !password) {
+        showAlert('⚠️ Please enter both username and password.', 'warning');
+        return;
+      }
 
-  <script src="/js/login.js"></script>
+      setBtnLoading('login-btn', 'login-spinner', 'login-label', true, 'Logging in…');
+
+      try {
+        const res  = await fetch('/api/auth/login', {
+          method:      'POST',
+          credentials: 'include',
+          headers:     { 'Content-Type': 'application/json' },
+          body:        JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showAlert('✅ ' + data.message, 'success');
+          // Small delay so user sees the success message before redirect
+          setTimeout(() => { window.location.href = '/dashboard.html'; }, 800);
+        } else {
+          showAlert('❌ ' + (data.message || 'Login failed.'), 'error');
+          setBtnLoading('login-btn', 'login-spinner', 'login-label', false, 'Login');
+        }
+      } catch (err) {
+        showAlert('❌ Could not connect to server. Is the backend running?', 'error');
+        setBtnLoading('login-btn', 'login-spinner', 'login-label', false, 'Login');
+      }
+    });
+
+    // ── SQL Injection demo form ──────────────────────────────────────────────
+    document.getElementById('sqli-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('sqli-username').value;
+      const password = document.getElementById('sqli-password').value;
+      const mode     = currentSubMode;
+
+      setBtnLoading('sqli-btn', 'sqli-spinner', 'sqli-label', true, 'Running…');
+      document.getElementById('sqli-result').style.display = 'none';
+
+      try {
+        const res  = await fetch('/api/sqli-demo/login', {
+          method:      'POST',
+          credentials: 'include',
+          headers:     { 'Content-Type': 'application/json' },
+          body:        JSON.stringify({ username, password, mode })
+        });
+        const data = await res.json();
+        displaySqliResult(data);
+      } catch (err) {
+        showAlert('❌ Could not connect to server. Is the backend running?', 'error');
+      }
+
+      setBtnLoading('sqli-btn', 'sqli-spinner', 'sqli-label', false, 'Run Demo');
+    });
+
+    // ── Render SQL injection result ──────────────────────────────────────────
+    function displaySqliResult(data) {
+      const panel = document.getElementById('sqli-result');
+      panel.style.display = '';
+
+      // Show constructed SQL
+      document.getElementById('sqli-sql').textContent = data.constructedSql || '—';
+
+      // Outcome box
+      const outcomeEl = document.getElementById('sqli-outcome');
+      if (data.success) {
+        const u = data.loggedInAs;
+        outcomeEl.className = 'result-outcome outcome-success';
+        outcomeEl.innerHTML = `
+          <strong>🔓 Authentication BYPASSED!</strong><br/>
+          Logged in as: <strong>${u ? u.full_name : '—'}</strong>
+          (username: <code>${u ? u.username : '—'}</code>,
+           role: <code>${u ? u.role : '—'}</code>)<br/>
+          Rows returned: <strong>${data.rowsReturned}</strong>
+        `;
+      } else if (data.queryError) {
+        outcomeEl.className = 'result-outcome outcome-error';
+        outcomeEl.innerHTML = `<strong>💥 SQL Error:</strong> <code>${escHtml(data.queryError)}</code>`;
+      } else {
+        outcomeEl.className = 'result-outcome outcome-blocked';
+        outcomeEl.innerHTML = `<strong>🔒 Login failed</strong> – credentials did not match any account.`;
+      }
+
+      // Explanation
+      document.getElementById('sqli-explanation').textContent = data.explanation || '';
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function showAlert(msg, type) {
+      const el = document.getElementById('login-alert');
+      const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+      el.className = `alert alert-${type}`;
+      el.textContent = (icons[type] || '') + ' ' + msg;
+    }
+
+    function clearAlert() {
+      const el = document.getElementById('login-alert');
+      el.className = 'alert';
+      el.textContent = '';
+    }
+
+    function setBtnLoading(btnId, spinnerId, labelId, on, text) {
+      document.getElementById(btnId).disabled              = on;
+      document.getElementById(spinnerId).style.display     = on ? 'inline-block' : 'none';
+      document.getElementById(labelId).textContent         = on ? text : (labelId === 'login-label' ? 'Login' : 'Run Demo');
+    }
+
+    // Escape HTML to prevent accidental XSS in results display
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
 </body>
 </html>

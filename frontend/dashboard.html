@@ -4,106 +4,366 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard – CampusConnect</title>
-  <meta name="description" content="CampusConnect user dashboard. View stats and recent activity." />
+  <meta name="description" content="Your CampusConnect personal dashboard. View your profile, announcements, upcoming events, and quick links." />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
   <div class="layout">
+    <!-- Sidebar injected by common.js -->
     <aside id="sidebar" class="sidebar"></aside>
 
     <div class="main-content">
+
+      <!-- Top bar -->
       <header class="topbar">
         <div class="topbar-left">
           <div class="topbar-breadcrumb">CampusConnect / <span>Dashboard</span></div>
         </div>
+        <div class="topbar-right">
+          <span id="topbar-time" class="text-sm text-muted"></span>
+        </div>
       </header>
 
+      <!-- Page body -->
       <div class="page-inner">
 
-        <!-- Welcome banner -->
-        <div class="page-header fade-in">
-          <h1>👋 Welcome back, <span id="welcome-name">...</span></h1>
-          <p>You are logged in as <span id="welcome-role" style="color:var(--color-primary-h); font-weight:600;"></span>.</p>
+        <!-- ══ Welcome Banner ══════════════════════════════════════════════ -->
+        <div class="welcome-banner fade-up" id="welcome-banner">
+          <div>
+            <h2 id="welcome-name">👋 Welcome back, Student!</h2>
+            <p id="welcome-role">You are logged in as <strong>student</strong>.</p>
+            <div class="wb-time" id="welcome-date"></div>
+          </div>
+          <div class="wb-icon" aria-hidden="true">🎓</div>
         </div>
 
-        <!-- Stat cards -->
-        <div class="grid grid-4 mb-lg">
+        <!-- ══ Student Profile Card ════════════════════════════════════════ -->
+        <div class="profile-card fade-up mb-lg" id="profile-card">
+          <div class="profile-avatar-lg" id="dash-avatar">A</div>
+          <div>
+            <div class="p-name" id="dash-name">Alice Smith</div>
+            <div class="p-id"   id="dash-id">CS2021001 · alice@campusconnect.edu</div>
+            <div class="p-tags">
+              <span class="p-tag" id="dash-dept">Computer Science</span>
+              <span class="p-tag" id="dash-year">Year 3</span>
+              <span class="p-tag" id="dash-gpa">GPA: 3.80</span>
+            </div>
+          </div>
+        </div>
 
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(99,102,241,0.15);">👨‍🎓</div>
-            <div class="stat-info">
-              <div class="stat-value" id="stat-students">—</div>
+        <!-- ══ Stat Cards ══════════════════════════════════════════════════ -->
+        <div class="grid grid-4 mb-lg" aria-label="Quick statistics">
+
+          <div class="stat-card fade-up">
+            <div class="stat-icon" style="background:rgba(37,99,235,0.12);">👨‍🎓</div>
+            <div>
+              <div class="stat-value" id="stat-students">8</div>
               <div class="stat-label">Total Students</div>
             </div>
           </div>
 
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(16,185,129,0.15);">⏱️</div>
-            <div class="stat-info">
-              <div class="stat-value" id="stat-uptime">—</div>
-              <div class="stat-label">Server Uptime</div>
+          <div class="stat-card fade-up">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.12);">📢</div>
+            <div>
+              <div class="stat-value">4</div>
+              <div class="stat-label">Announcements</div>
             </div>
           </div>
 
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(34,211,238,0.15);">📡</div>
-            <div class="stat-info">
-              <div class="stat-value">Online</div>
-              <div class="stat-label">Server Status</div>
+          <div class="stat-card fade-up">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.12);">📅</div>
+            <div>
+              <div class="stat-value">3</div>
+              <div class="stat-label">Upcoming Events</div>
             </div>
           </div>
 
-          <div class="stat-card fade-in">
-            <div class="stat-icon" style="background:rgba(245,158,11,0.15);">🔒</div>
-            <div class="stat-info">
-              <div class="stat-value">Active</div>
-              <div class="stat-label">Session</div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Quick links + Recent activity -->
-        <div class="grid grid-2 gap-lg">
-
-          <!-- Quick links -->
-          <div class="card fade-in">
-            <div class="card-header">
-              <span class="card-title">Quick Access</span>
-            </div>
-            <div class="flex flex-col gap-sm">
-              <a href="/directory.html"   class="btn btn-ghost">📋 Student Directory</a>
-              <a href="/search.html"      class="btn btn-ghost">🔍 Search Students</a>
-              <a href="/diagnostics.html" class="btn btn-ghost">🖥️ Server Diagnostics</a>
-              <a href="/settings.html"    class="btn btn-ghost">⚙️ Account Settings</a>
-            </div>
-          </div>
-
-          <!-- Recent activity -->
-          <div class="card fade-in">
-            <div class="card-header">
-              <span class="card-title">Recent Activity</span>
-              <a href="/diagnostics.html" class="btn btn-sm btn-ghost">View all →</a>
-            </div>
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr><th>User</th><th>Action</th><th>When</th></tr>
-                </thead>
-                <tbody id="log-tbody">
-                  <tr><td colspan="3" class="text-center text-muted">Loading…</td></tr>
-                </tbody>
-              </table>
+          <div class="stat-card fade-up">
+            <div class="stat-icon" style="background:rgba(124,58,237,0.12);">🔒</div>
+            <div>
+              <div class="stat-value" style="font-size:1rem; color:var(--success);">Active</div>
+              <div class="stat-label">Session Status</div>
             </div>
           </div>
 
         </div>
 
-      </div>
-    </div>
-  </div>
+        <!-- ══ Announcements + Events (two columns) ════════════════════════ -->
+        <div class="grid grid-2 gap-lg mb-lg">
+
+          <!-- Recent Announcements card -->
+          <div class="card fade-up">
+            <div class="card-header">
+              <span class="card-title">📢 Recent Announcements</span>
+              <a href="/search.html" class="btn btn-sm btn-ghost">View All →</a>
+            </div>
+            <!-- Announcement list items are injected by JS below -->
+            <div id="announcements-list"></div>
+          </div>
+
+          <!-- Upcoming Events card -->
+          <div class="card fade-up">
+            <div class="card-header">
+              <span class="card-title">📅 Upcoming Events</span>
+              <a href="/search.html" class="btn btn-sm btn-ghost">View All →</a>
+            </div>
+            <!-- Event list items are injected by JS below -->
+            <div id="events-list"></div>
+          </div>
+
+        </div>
+
+        <!-- ══ Quick Access Module Cards ══════════════════════════════════ -->
+        <div class="section-title">Quick Access</div>
+        <div class="grid grid-4 gap-lg">
+
+          <a href="/directory.html" class="module-card fade-up" id="qlink-directory">
+            <div class="m-icon" style="background:rgba(37,99,235,0.1);">👥</div>
+            <div>
+              <div class="m-title">Student Directory</div>
+              <div class="m-desc">Browse all enrolled students by department or name.</div>
+            </div>
+            <div class="m-arrow">View Directory →</div>
+          </a>
+
+          <a href="/search.html" class="module-card fade-up" id="qlink-search">
+            <div class="m-icon" style="background:rgba(16,185,129,0.1);">🔍</div>
+            <div>
+              <div class="m-title">Campus Search</div>
+              <div class="m-desc">Search announcements and campus events quickly.</div>
+            </div>
+            <div class="m-arrow">Search Now →</div>
+          </a>
+
+          <a href="/diagnostics.html" class="module-card fade-up" id="qlink-diagnostics">
+            <div class="m-icon" style="background:rgba(245,158,11,0.1);">🌐</div>
+            <div>
+              <div class="m-title">Network Diagnostics</div>
+              <div class="m-desc">Check campus network connectivity and run ping tests.</div>
+            </div>
+            <div class="m-arrow">Run Diagnostics →</div>
+          </a>
+
+          <a href="/settings.html" class="module-card fade-up" id="qlink-settings">
+            <div class="m-icon" style="background:rgba(124,58,237,0.1);">⚙️</div>
+            <div>
+              <div class="m-title">Account Settings</div>
+              <div class="m-desc">Update your name, email, and profile information.</div>
+            </div>
+            <div class="m-arrow">Manage Account →</div>
+          </a>
+
+        </div>
+
+        <!-- ══ Security Lab Modules ════════════════════════════════════════ -->
+        <div class="section-title" style="margin-top:2rem;">🔒 Security Lab – Vulnerability Demonstrations</div>
+        <div class="grid grid-4 gap-lg" style="margin-bottom:2rem;">
+
+          <a href="/login.html#lab" class="module-card fade-up" style="border-left:3px solid #ef4444;">
+            <div class="m-icon" style="background:rgba(239,68,68,0.1);">💉</div>
+            <div>
+              <div class="m-title">Module 1: SQLi Auth Bypass</div>
+              <div class="m-desc">SQL Injection via authentication bypass. Use <code>' OR '1'='1' --</code> to bypass login.</div>
+            </div>
+            <div class="m-arrow" style="color:#ef4444;">Open Lab →</div>
+          </a>
+
+          <a href="/directory.html" class="module-card fade-up" style="border-left:3px solid #f97316;">
+            <div class="m-icon" style="background:rgba(249,115,22,0.1);">🔗</div>
+            <div>
+              <div class="m-title">Module 2: SQLi UNION Attack</div>
+              <div class="m-desc">UNION-based SQL Injection. Extract data from other tables via search.</div>
+            </div>
+            <div class="m-arrow" style="color:#f97316;">Open Lab →</div>
+          </a>
+
+          <a href="/diagnostics.html" class="module-card fade-up" style="border-left:3px solid #eab308;">
+            <div class="m-icon" style="background:rgba(234,179,8,0.1);">⚡</div>
+            <div>
+              <div class="m-title">Module 3: Command Injection</div>
+              <div class="m-desc">OS Command Injection via shell metacharacters in the ping tool.</div>
+            </div>
+            <div class="m-arrow" style="color:#eab308;">Open Lab →</div>
+          </a>
+
+          <a href="/search.html" class="module-card fade-up" style="border-left:3px solid #8b5cf6;">
+            <div class="m-icon" style="background:rgba(139,92,246,0.1);">📝</div>
+            <div>
+              <div class="m-title">Module 4: Reflected XSS</div>
+              <div class="m-desc">Cross-Site Scripting via unsanitised search term reflection.</div>
+            </div>
+            <div class="m-arrow" style="color:#8b5cf6;">Open Lab →</div>
+          </a>
+
+          <a href="/settings.html" class="module-card fade-up" style="border-left:3px solid #06b6d4;">
+            <div class="m-icon" style="background:rgba(6,182,212,0.1);">🏴‍☠️</div>
+            <div>
+              <div class="m-title">Module 5: CSRF Attack</div>
+              <div class="m-desc">POST-based CSRF via forged email update. Synchronizer token mitigation.</div>
+            </div>
+            <div class="m-arrow" style="color:#06b6d4;">Open Lab →</div>
+          </a>
+
+          <a href="/csrf-attacker.html" target="_blank" class="module-card fade-up" style="border-left:3px solid #dc2626; background:rgba(220,38,38,0.03);">
+            <div class="m-icon" style="background:rgba(220,38,38,0.1);">🌐</div>
+            <div>
+              <div class="m-title">CSRF Attacker Page</div>
+              <div class="m-desc">Standalone attacker demo. Simulates forged cross-origin form submissions.</div>
+            </div>
+            <div class="m-arrow" style="color:#dc2626;">Open ↗</div>
+          </a>
+
+        </div>
+
+      </div><!-- /page-inner -->
+    </div><!-- /main-content -->
+  </div><!-- /layout -->
 
   <script src="/js/common.js"></script>
-  <script src="/js/dashboard.js"></script>
+  <script>
+    /**
+     * dashboard.js (inline)
+     *
+     * Loads the dashboard:
+     *  - Auth check (session API or mock session in sessionStorage)
+     *  - Builds sidebar with the logged-in user's details
+     *  - Populates the welcome banner, profile card, stat, announcements, events
+     *  - Falls back to MOCK_DATA when the backend is not running
+     */
+
+    document.addEventListener('DOMContentLoaded', async () => {
+
+      // ── 1. Authentication guard ──────────────────────────────────────────
+      const user = await resolveUser();
+      if (!user) return; // resolveUser() redirects to login if no session
+
+      // ── 2. Build sidebar ─────────────────────────────────────────────────
+      buildSidebar(user);
+
+      // ── 3. Live clock in topbar ───────────────────────────────────────────
+      updateClock();
+      setInterval(updateClock, 60000);
+
+      // ── 4. Welcome banner ─────────────────────────────────────────────────
+      const displayName = user.full_name || user.username || 'Student';
+      document.getElementById('welcome-name').textContent = `👋 Welcome back, ${displayName}!`;
+      document.getElementById('welcome-role').innerHTML   = `You are logged in as <strong>${user.role}</strong>.`;
+      document.getElementById('welcome-date').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      // ── 5. Profile card ────────────────────────────────────────────────────
+      // Try the real API first, fall back to MOCK_DATA
+      let profile = null;
+      try {
+        const pd = await apiFetch('/api/settings/profile');
+        if (pd.success) profile = pd.profile;
+      } catch (e) {}
+
+      if (profile) {
+        // Real API data
+        const initials = (profile.full_name || '?').charAt(0).toUpperCase();
+        document.getElementById('dash-avatar').textContent = initials;
+        document.getElementById('dash-name').textContent   = profile.full_name || '—';
+        document.getElementById('dash-id').textContent     = `${profile.enrollment || profile.username} · ${profile.email}`;
+        document.getElementById('dash-dept').textContent   = profile.department || '—';
+        document.getElementById('dash-year').textContent   = profile.year ? `Year ${profile.year}` : '—';
+        document.getElementById('dash-gpa').textContent    = profile.gpa ? `GPA: ${parseFloat(profile.gpa).toFixed(2)}` : '—';
+      } else {
+        // Mock fallback
+        const mock = MOCK_DATA.profile;
+        document.getElementById('dash-avatar').textContent = mock.avatar;
+        document.getElementById('dash-name').textContent   = mock.name;
+        document.getElementById('dash-id').textContent     = `${mock.enrollment} · ${mock.email}`;
+        document.getElementById('dash-dept').textContent   = mock.department;
+        document.getElementById('dash-year').textContent   = mock.year;
+        document.getElementById('dash-gpa').textContent    = `GPA: ${mock.gpa}`;
+      }
+
+      // ── 6. Stat cards – try backend, fallback to mock count ───────────────
+      try {
+        const data = await apiFetch('/api/directory');
+        if (data.success) {
+          document.getElementById('stat-students').textContent = data.students.length;
+        }
+      } catch (e) {
+        document.getElementById('stat-students').textContent = MOCK_DATA.students.length;
+      }
+
+      // ── 7. Announcements ──────────────────────────────────────────────────
+      // Try the real API first; fall back to MOCK_DATA
+      try {
+        const ann = await apiFetch('/api/announcements');
+        if (ann.success && ann.announcements.length > 0) {
+          renderAnnouncements(ann.announcements);
+        } else {
+          renderAnnouncements(MOCK_DATA.announcements);
+        }
+      } catch (e) {
+        renderAnnouncements(MOCK_DATA.announcements);
+      }
+
+      // ── 8. Events ─────────────────────────────────────────────────────────
+      renderEvents(MOCK_DATA.events);
+    });
+
+    /* ── Resolve logged-in user ─────────────────────────────────────────────
+       Tries the real session API first, then falls back to sessionStorage
+       (mock mode). If neither works, redirects to login.                 */
+    async function resolveUser() {
+      // Try real API
+      try {
+        const data = await apiFetch('/api/auth/me');
+        if (data.success) return data.user;
+      } catch (e) { /* backend offline */ }
+
+      // Try mock session (set by login.html in demo mode)
+      const raw = sessionStorage.getItem('mock_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        return { username: u.username, full_name: u.full_name, role: u.role };
+      }
+
+      // No session at all – go to login
+      window.location.href = '/login.html';
+      return null;
+    }
+
+    /* ── Live clock ─────────────────────────────────────────────────────────*/
+    function updateClock() {
+      document.getElementById('topbar-time').textContent =
+        new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    /* ── Render announcements list ──────────────────────────────────────────*/
+    function renderAnnouncements(list) {
+      const el = document.getElementById('announcements-list');
+      el.innerHTML = list.slice(0, 3).map(a => `
+        <div class="list-item">
+          <div class="li-icon" style="background:rgba(37,99,235,0.1);">${a.icon || '📢'}</div>
+          <div>
+            <div class="li-title">${a.title}</div>
+            <div class="li-meta">${a.category} · ${a.created_at ? new Date(a.created_at).toLocaleDateString() : (typeof formatDate === 'function' ? formatDate(a.date) : (a.date || ''))}</div>
+            <div class="li-body">${a.description || a.body || ''}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ── Render events list ─────────────────────────────────────────────────*/
+    function renderEvents(list) {
+      const el = document.getElementById('events-list');
+      el.innerHTML = list.map(ev => `
+        <div class="list-item">
+          <div class="li-icon" style="background:rgba(16,185,129,0.1);">${ev.icon}</div>
+          <div>
+            <div class="li-title">${ev.title}</div>
+            <div class="li-meta">${ev.date} · ${ev.time}</div>
+            <div class="li-body">📍 ${ev.venue}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
 </body>
 </html>

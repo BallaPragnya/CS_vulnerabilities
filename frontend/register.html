@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register – CampusConnect</title>
+  <meta name="description" content="Create a new CampusConnect student portal account." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <div class="auth-page" id="auth-page">
+
+    <!-- ── Left decorative panel ── -->
+    <div class="auth-left" aria-hidden="true">
+      <div class="al-logo">🏫</div>
+      <h2>Join CampusConnect</h2>
+      <p>Create your account to unlock the full university portal experience.</p>
+      <div class="al-bullets">
+        <div class="al-bullet"><span>🔑</span><span>Secure role-based access</span></div>
+        <div class="al-bullet"><span>📢</span><span>Real-time announcements</span></div>
+        <div class="al-bullet"><span>👥</span><span>Connect with fellow students</span></div>
+        <div class="al-bullet"><span>📅</span><span>Never miss a campus event</span></div>
+      </div>
+    </div>
+
+    <!-- ── Right form panel ── -->
+    <div class="auth-right">
+      <div class="auth-card">
+
+        <!-- Mini logo -->
+        <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:1.5rem;">
+          <div style="width:36px; height:36px; background:var(--blue); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">🎓</div>
+          <div style="font-weight:800; font-size:1rem; color:var(--navy);">CampusConnect</div>
+        </div>
+
+        <h1 class="auth-title" style="font-size:1.6rem;">Create Account</h1>
+        <p class="auth-sub">Fill in the details below to register as a student.</p>
+
+        <!-- Alert box -->
+        <div id="alert-box" class="alert" role="alert" aria-live="polite"></div>
+
+        <!-- ── Registration form ── -->
+        <form id="register-form" novalidate>
+
+          <!-- Full name -->
+          <div class="form-group">
+            <label for="full-name">Full Name</label>
+            <input
+              type="text"
+              id="full-name"
+              name="full_name"
+              placeholder="e.g. Jane Doe"
+              autocomplete="name"
+              required
+            />
+          </div>
+
+          <!-- Enrollment number -->
+          <div class="form-group">
+            <label for="enrollment">Enrollment Number</label>
+            <input
+              type="text"
+              id="enrollment"
+              name="enrollment"
+              placeholder="e.g. CS2026001"
+              required
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email">University Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="e.g. jane@campusconnect.edu"
+              autocomplete="email"
+              required
+            />
+          </div>
+
+          <!-- Department -->
+          <div class="form-group">
+            <label for="department">Department</label>
+            <select id="department" name="department" required>
+              <option value="">— Select Department —</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Electrical Engineering">Electrical Engineering</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Business Administration">Business Administration</option>
+              <option value="Physics">Physics</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+              <option value="Chemistry">Chemistry</option>
+            </select>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Minimum 6 characters"
+              autocomplete="new-password"
+              required
+            />
+          </div>
+
+          <!-- Submit button -->
+          <button type="submit" id="submit-btn" class="btn btn-primary btn-block btn-lg mt-md">
+            <span id="btn-spinner" class="spinner" style="display:none;"></span>
+            <span id="btn-text">Create Account</span>
+          </button>
+
+        </form>
+
+        <!-- Link back to login -->
+        <p class="auth-link">
+          Already have an account? <a href="/login.html" id="go-login-link">Sign In</a>
+        </p>
+        <p class="auth-link" style="margin-top:0.5rem;">
+          <a href="/index.html" style="color:var(--gray-400); font-size:0.8rem;">← Back to Home</a>
+        </p>
+
+      </div>
+    </div>
+  </div><!-- /auth-page -->
+
+  <script>
+    /**
+     * register.js (inline)
+     *
+     * Handles the registration form:
+     *  1. Validates all required fields client-side
+     *  2. Submits to the backend /api/auth/register (POST)
+     *  3. Falls back to MOCK mode if backend is unavailable
+     *  4. On success: redirects to login page with a success message
+     */
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form       = document.getElementById('register-form');
+      const alertBox   = document.getElementById('alert-box');
+      const submitBtn  = document.getElementById('submit-btn');
+      const btnText    = document.getElementById('btn-text');
+      const btnSpinner = document.getElementById('btn-spinner');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        // Read form values
+        const full_name  = document.getElementById('full-name').value.trim();
+        const enrollment = document.getElementById('enrollment').value.trim();
+        const email      = document.getElementById('email').value.trim();
+        const department = document.getElementById('department').value;
+        const password   = document.getElementById('password').value;
+
+        // ── Client-side validation ──────────────────────────────────────
+        if (!full_name || !enrollment || !email || !department || !password) {
+          showAlert('⚠️ Please fill in all fields.', 'warning');
+          return;
+        }
+        if (password.length < 6) {
+          showAlert('⚠️ Password must be at least 6 characters.', 'warning');
+          return;
+        }
+        if (!email.includes('@')) {
+          showAlert('⚠️ Please enter a valid email address.', 'warning');
+          return;
+        }
+
+        setLoading(true);
+        clearAlert();
+
+        // ── Try real backend ────────────────────────────────────────────
+        let usedMock = false;
+        try {
+          const res  = await fetch('/api/auth/register', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ full_name, username: enrollment, email, password, role: 'student' })
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            showAlert('✅ Account created! Redirecting to login…', 'success');
+            setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+            return;
+          } else {
+            showAlert('❌ ' + (data.message || 'Registration failed.'), 'error');
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          usedMock = true; // backend not running
+        }
+
+        // ── Mock registration ──────────────────────────────────────────
+        if (usedMock) {
+          await new Promise(r => setTimeout(r, 700)); // simulate delay
+          showAlert(`✅ Account created for ${full_name}! (Demo mode) Redirecting…`, 'success');
+          setTimeout(() => { window.location.href = '/login.html'; }, 1500);
+        }
+      });
+
+      /* ── Helpers ─────────────────────────────────────────────────────── */
+      function showAlert(msg, type) {
+        alertBox.className   = `alert alert-${type} fade-up`;
+        alertBox.textContent = msg;
+      }
+      function clearAlert() {
+        alertBox.innerHTML = '';
+        alertBox.className = 'alert';
+      }
+      function setLoading(on) {
+        submitBtn.disabled       = on;
+        btnText.textContent      = on ? 'Creating account…' : 'Create Account';
+        btnSpinner.style.display = on ? 'inline-block' : 'none';
+      }
+    });
+  </script>
+</body>
+</html>

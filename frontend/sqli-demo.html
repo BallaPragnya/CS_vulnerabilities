@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Injection Lab – CampusConnect Security</title>
+  <meta name="description" content="Interactive SQL Injection authentication bypass demonstration. Compare vulnerable string-concatenation queries against parameterised queries." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside id="sidebar" class="sidebar"></aside>
+
+    <div class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-breadcrumb">CampusConnect / Security Lab / <span>SQL Injection</span></div>
+        </div>
+      </header>
+
+      <div class="page-inner">
+
+        <!-- ══ Lab Banner ════════════════════════════════════════════════════ -->
+        <div class="lab-banner">
+          <div class="lab-banner-left">
+            <h2>💉 SQL Injection Lab</h2>
+            <p>
+              Educational demonstration of authentication bypass via SQL injection.<br/>
+              <strong>⚠️ Isolated localhost environment · Synthetic demo database only</strong>
+            </p>
+          </div>
+          <div class="lab-banner-icon">🔐</div>
+        </div>
+
+        <!-- ══ Mode Selector ═════════════════════════════════════════════════ -->
+        <div class="card fade-up mb-lg" id="mode-card">
+          <div class="card-header">
+            <span class="card-title">Select Demonstration Mode</span>
+            <span id="current-mode-badge" class="mode-badge mode-badge-vuln">🔴 VULNERABLE</span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; padding-top:0.25rem;">
+            <div class="mode-toggle">
+              <button class="mode-btn vulnerable-btn active-vulnerable" id="btn-vuln" onclick="setMode('vulnerable')"
+                      aria-pressed="true">🔴 Vulnerable Mode</button>
+              <button class="mode-btn secure-btn" id="btn-safe" onclick="setMode('secure')"
+                      aria-pressed="false">🟢 Secure Mode</button>
+            </div>
+            <p style="font-size:0.84rem; color:var(--gray-500); max-width:480px; margin:0;">
+              Switch between the <strong>unsafe string-concatenation</strong> query and the
+              <strong>parameterised</strong> query to see exactly why one is exploitable
+              and the other is not.
+            </p>
+          </div>
+
+          <!-- Mode explanation panel (swapped by JS) -->
+          <div id="mode-explanation" style="margin-top:1rem;"></div>
+        </div>
+
+        <!-- ══ Main two-column layout ════════════════════════════════════════ -->
+        <div class="grid grid-2 gap-lg" style="align-items:start;">
+
+          <!-- ── LEFT: Login form + payload builder ── -->
+          <div>
+
+            <!-- Login form -->
+            <div class="card fade-up mb-lg">
+              <div class="card-header">
+                <span class="card-title">🔑 Demo Login Form</span>
+                <span id="form-mode-badge" class="mode-badge mode-badge-vuln">VULNERABLE</span>
+              </div>
+
+              <form id="demo-form" novalidate autocomplete="off">
+                <div class="form-group">
+                  <label for="demo-username">Username</label>
+                  <input type="text" id="demo-username" placeholder="Enter username or injection payload"
+                         autocomplete="off" spellcheck="false" />
+                </div>
+                <div class="form-group">
+                  <label for="demo-password">Password</label>
+                  <input type="text" id="demo-password" placeholder="Enter password"
+                         autocomplete="off" spellcheck="false" />
+                  <div style="font-size:0.75rem; color:var(--gray-400); margin-top:0.3rem;">
+                    ℹ️ Shown as plain text to aid demonstration. Demo table only.
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block mt-sm" id="demo-submit-btn">
+                  <span id="demo-spinner" class="spinner" style="display:none;"></span>
+                  <span id="demo-label">Attempt Login</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- Payload builder -->
+            <div class="card fade-up mb-lg">
+              <div class="card-header">
+                <span class="card-title">🧪 Pre-Built Payloads</span>
+              </div>
+              <p style="font-size:0.82rem; color:var(--gray-500); margin-bottom:0.75rem;">
+                Click a payload chip to auto-fill the form, then click <strong>Attempt Login</strong>.
+              </p>
+
+              <div style="margin-bottom:0.9rem;">
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--gray-400); margin-bottom:0.5rem;">
+                  🔴 Injection Payloads (bypass attempts)
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                  <span class="payload-chip" onclick="fillPayload(&quot;' OR '1'='1' --&quot;, 'x')"
+                        title="Classic OR bypass">' OR '1'='1' --</span>
+                  <span class="payload-chip" onclick="fillPayload(&quot;' OR 1=1 --&quot;, 'anything')"
+                        title="Numeric OR bypass">' OR 1=1 --</span>
+                  <span class="payload-chip" onclick="fillPayload(&quot;' OR 'a'='a&quot;, &quot;' OR 'a'='a&quot;)"
+                        title="Double-field bypass">' OR 'a'='a</span>
+                  <span class="payload-chip" onclick="fillPayload('demoadmin\' --', 'wrong')"
+                        title="Username guess + comment">demoadmin' --</span>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--gray-400); margin-bottom:0.5rem;">
+                  🟢 Legitimate Credentials (should always work)
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+                  <span class="payload-chip" style="color:#79c0ff;" onclick="fillPayload('demouser', 'demopass')">demouser / demopass</span>
+                  <span class="payload-chip" style="color:#79c0ff;" onclick="fillPayload('demoadmin', 'adminpass')">demoadmin / adminpass</span>
+                  <span class="payload-chip" style="color:#79c0ff;" onclick="fillPayload('alice_lab', 'labpass123')">alice_lab / labpass123</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Demo accounts reference -->
+            <div class="card fade-up">
+              <div class="card-header">
+                <span class="card-title">📋 Demo Database Accounts</span>
+              </div>
+              <div id="accounts-table">
+                <p class="text-muted" style="font-size:0.84rem;">Loading accounts…</p>
+              </div>
+              <div class="warn-panel" style="margin-top:0.75rem;">
+                <strong>⚠️ Note:</strong> This <code>sqli_demo_users</code> table stores
+                passwords as plain text <em>intentionally</em> — it is a synthetic teaching
+                table completely isolated from the real CampusConnect user database.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── RIGHT: Live SQL visualiser + result ── -->
+          <div>
+
+            <!-- Live SQL query box -->
+            <div class="card fade-up mb-lg">
+              <div class="card-header">
+                <span class="card-title">🗄️ Live SQL Query</span>
+                <span style="font-size:0.75rem; color:var(--gray-400);">Updates after each attempt</span>
+              </div>
+
+              <div class="sql-box-label">
+                <span>
+                  <span class="sql-label-dot" id="dot-color" style="background:var(--danger);"></span>
+                  <span id="query-label-text">Constructed query (vulnerable mode)</span>
+                </span>
+                <span id="query-rows-badge" style="display:none; font-size:0.72rem; padding:0.15rem 0.5rem;
+                       border-radius:4px; background:var(--danger-bg); color:var(--danger); font-weight:700;"></span>
+              </div>
+
+              <!-- The SQL visualiser pre element -->
+              <div id="sql-display" class="sql-box vuln-query">
+                <span style="color:#8b949e; font-style:italic;">
+  -- Query will appear here after you click Attempt Login
+  SELECT id, username, role, full_name
+  FROM   sqli_demo_users
+  WHERE  username = '[your input]'
+  AND    password = '[your input]'</span>
+              </div>
+
+              <!-- Parameter values display (secure mode only) -->
+              <div id="param-values" style="display:none; margin-top:0.6rem;">
+                <div class="sql-box-label">
+                  <span>Bound parameter values</span>
+                </div>
+                <div style="background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm);
+                             padding:0.6rem 0.9rem; font-family:var(--mono); font-size:0.8rem; color:var(--gray-700);">
+                  <span id="param-display"></span>
+                </div>
+              </div>
+
+              <!-- Explanation after query -->
+              <div id="query-explanation" style="margin-top:0.75rem; display:none;"></div>
+            </div>
+
+            <!-- Result panel -->
+            <div class="card fade-up mb-lg">
+              <div class="card-header">
+                <span class="card-title">🎯 Result</span>
+              </div>
+              <div class="result-panel idle" id="result-panel">
+                <div class="result-icon">⏳</div>
+                <div>
+                  <div class="result-title">Awaiting attempt…</div>
+                  <div class="result-body">Select a payload above and click <strong>Attempt Login</strong>.</div>
+                </div>
+              </div>
+              <div id="logged-in-as" style="display:none; margin-top:0.75rem;"></div>
+            </div>
+
+            <!-- Side-by-side comparison card -->
+            <div class="card fade-up">
+              <div class="card-header">
+                <span class="card-title">📊 Vulnerable vs Secure — Code Comparison</span>
+              </div>
+
+              <div class="compare-label" style="color:var(--danger);">
+                <span>🔴</span> Vulnerable (string concatenation)
+              </div>
+              <div class="sql-box vuln-query" style="margin-bottom:1rem; font-size:0.78rem;">
+<span class="sql-comment">// ⚠️ VULNERABILITY: raw user input embedded in SQL string</span>
+<span class="sql-keyword">const</span> sql = <span class="sql-string">`SELECT * FROM sqli_demo_users`</span>
+           + <span class="sql-string">" WHERE username = '<span class="sql-inject">${username}</span>'"</span>
+           + <span class="sql-string">" AND password = '<span class="sql-inject">${password}</span>'"</span>;
+
+<span class="sql-comment">// If username = ' OR '1'='1' --  then sql becomes:</span>
+<span class="sql-comment">// WHERE username = '' OR '1'='1' --' AND password = '...'</span>
+<span class="sql-comment">//                      ↑ always TRUE  ↑ rest commented out</span></div>
+
+              <div class="compare-label" style="color:var(--success);">
+                <span>🟢</span> Secure (parameterised query)
+              </div>
+              <div class="sql-box safe-query" style="font-size:0.78rem;">
+<span class="sql-comment">// ✅ FIX: ? placeholders — user input bound separately</span>
+<span class="sql-keyword">const</span> user = db.prepare(<span class="sql-string">`
+  SELECT * FROM sqli_demo_users
+  WHERE username = <span class="sql-param">?</span>
+  AND   password = <span class="sql-param">?</span>
+`</span>).get(<span class="sql-param">username</span>, <span class="sql-param">password</span>);
+
+<span class="sql-comment">// Payload ' OR '1'='1' -- is treated as a LITERAL string.</span>
+<span class="sql-comment">// No row matches username = "' OR '1'='1' --"  → login fails.</span></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ How It Works — Theory Section ════════════════════════════════ -->
+        <div class="card fade-up mt-lg">
+          <div class="card-header">
+            <span class="card-title">📖 How SQL Injection Works — Theory</span>
+          </div>
+
+          <div class="grid grid-2 gap-lg" style="margin-top:0.5rem;">
+
+            <div>
+              <h3 style="font-size:0.95rem; font-weight:700; color:var(--danger); margin-bottom:0.6rem;">
+                🔴 The Attack
+              </h3>
+              <p style="font-size:0.84rem; line-height:1.7; color:var(--gray-600);">
+                A <strong>SQL Injection</strong> attack occurs when user-supplied input is embedded
+                directly into an SQL query string without sanitisation. The attacker ends the
+                intended string literal with a single quote <code>'</code> and appends
+                arbitrary SQL clauses.
+              </p>
+              <div class="warn-panel" style="margin-top:0.75rem;">
+                <strong>Payload:</strong> <code>' OR '1'='1' --</code><br/><br/>
+                Original intent:<br/>
+                <code>WHERE username = 'alice' AND password = 'secret'</code><br/><br/>
+                What actually executes:<br/>
+                <code>WHERE username = '<strong style="color:#dc2626;">' OR '1'='1' --</strong>'
+AND password = 'x'</code><br/><br/>
+                The <code>--</code> comments out the password check. <code>'1'='1'</code> is always
+                TRUE, so <em>every</em> row is returned — authentication bypassed.
+              </div>
+            </div>
+
+            <div>
+              <h3 style="font-size:0.95rem; font-weight:700; color:var(--success); margin-bottom:0.6rem;">
+                🟢 The Fix
+              </h3>
+              <p style="font-size:0.84rem; line-height:1.7; color:var(--gray-600);">
+                <strong>Parameterised queries</strong> (also called prepared statements) separate
+                SQL code from data. The <code>?</code> placeholder is a typed value slot — the
+                database driver ensures user input is <em>never</em> parsed as SQL syntax,
+                regardless of what characters it contains.
+              </p>
+              <div class="fix-panel" style="margin-top:0.75rem;">
+                <strong>Even with the attack payload:</strong><br/>
+                <code>username = "' OR '1'='1' --"</code><br/><br/>
+                The database searches for a row where the <code>username</code> column
+                literally equals the string <code>' OR '1'='1' --</code>.
+                No such account exists → authentication fails → <strong>no bypass</strong>.
+              </div>
+              <div class="info-panel" style="margin-top:0.75rem;">
+                <strong>Additional defences:</strong>
+                <ul style="margin:0.5rem 0 0 1.2rem; line-height:1.8;">
+                  <li>Hash passwords with bcrypt (never compare plaintext)</li>
+                  <li>Validate and whitelist user inputs</li>
+                  <li>Use an ORM (Object-Relational Mapper)</li>
+                  <li>Apply least-privilege database accounts</li>
+                  <li>Enable a Web Application Firewall (WAF)</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ Viva Guide ════════════════════════════════════════════════════ -->
+        <div class="card fade-up mt-lg" style="border:1.5px solid var(--blue-light);">
+          <div class="card-header">
+            <span class="card-title">🎓 Viva / Demonstration Guide</span>
+          </div>
+          <div style="font-size:0.85rem; line-height:1.8; color:var(--gray-600);">
+            <ol style="margin-left:1.2rem; margin-top:0.25rem;">
+              <li>Open this page and ensure the server is running on <code>localhost:3000</code>.</li>
+              <li>Select <strong>🔴 Vulnerable Mode</strong> using the toggle at the top.</li>
+              <li>Click the payload chip <span class="payload-chip" style="cursor:default;">' OR '1'='1' --</span>
+                  to auto-fill the username field. Leave any value in the password field.</li>
+              <li>Click <strong>Attempt Login</strong> and observe:
+                <ul style="margin-top:0.25rem;">
+                  <li>The <em>Live SQL Query</em> panel shows the full injected string.</li>
+                  <li>The <em>Result</em> panel shows <strong>Authentication Bypassed ⚠️</strong>.</li>
+                  <li>A user account is returned even though no valid credentials were supplied.</li>
+                </ul>
+              </li>
+              <li>Switch to <strong>🟢 Secure Mode</strong>.</li>
+              <li>Use the <em>same payload</em> — click <span class="payload-chip" style="cursor:default;">' OR '1'='1' --</span> again.</li>
+              <li>Click <strong>Attempt Login</strong> and observe:
+                <ul style="margin-top:0.25rem;">
+                  <li>The SQL panel shows the <code>?</code> template — user input is NOT in the SQL string.</li>
+                  <li>The <em>Result</em> panel shows <strong>Attack Blocked 🛡️</strong>.</li>
+                  <li>Explain that the payload was treated as a literal value, not SQL code.</li>
+                </ul>
+              </li>
+              <li>Use a <strong>legitimate credential</strong> chip (e.g. <code>demouser / demopass</code>) in Secure Mode to show that normal login still works.</li>
+              <li>Scroll to the <em>Vulnerable vs Secure — Code Comparison</em> card and walk through the annotated code.</li>
+              <li>Point to the <em>How SQL Injection Works</em> section to explain the theory.</li>
+            </ol>
+          </div>
+        </div>
+
+      </div><!-- /page-inner -->
+    </div><!-- /main-content -->
+  </div><!-- /layout -->
+
+  <script src="/js/common.js"></script>
+  <script>
+    /**
+     * sqli-demo.js  (inline)
+     *
+     * Drives the SQL Injection demonstration page:
+     *   - Mode toggle (vulnerable / secure)
+     *   - Payload chip auto-fill
+     *   - API call to /api/sqli-demo/login
+     *   - Live SQL query syntax-highlighting
+     *   - Result panel rendering
+     *   - Demo accounts table
+     */
+
+    // ── Current state ─────────────────────────────────────────────────────────
+    let currentMode = 'vulnerable';
+
+    // ── Bootstrap on DOM ready ────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+
+      // Auth guard – redirect to login if not signed in
+      const user = await resolveUser();
+      if (!user) return;
+      buildSidebar(user);
+
+      // Set initial mode UI
+      setMode('vulnerable');
+
+      // Load the demo accounts table
+      loadAccounts();
+
+      // Attach form handler
+      document.getElementById('demo-form').addEventListener('submit', handleSubmit);
+    });
+
+    /* ── Auth helper (same pattern as other pages) ──────────────────────────*/
+    async function resolveUser() {
+      try {
+        const d = await apiFetch('/api/auth/me');
+        if (d.success) return d.user;
+      } catch (e) {}
+      const raw = sessionStorage.getItem('mock_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        return { username: u.username, full_name: u.full_name, role: u.role };
+      }
+      window.location.href = '/login.html';
+      return null;
+    }
+
+    /* ── Mode toggle ─────────────────────────────────────────────────────────*/
+    function setMode(mode) {
+      currentMode = mode;
+
+      const btnVuln = document.getElementById('btn-vuln');
+      const btnSafe = document.getElementById('btn-safe');
+      const badge   = document.getElementById('current-mode-badge');
+      const fBadge  = document.getElementById('form-mode-badge');
+      const sqlBox  = document.getElementById('sql-display');
+      const dot     = document.getElementById('dot-color');
+      const qlabel  = document.getElementById('query-label-text');
+      const explEl  = document.getElementById('mode-explanation');
+
+      if (mode === 'vulnerable') {
+        btnVuln.classList.add('active-vulnerable');
+        btnVuln.classList.remove('active-secure');
+        btnSafe.classList.remove('active-secure', 'active-vulnerable');
+        btnVuln.setAttribute('aria-pressed', 'true');
+        btnSafe.setAttribute('aria-pressed', 'false');
+
+        badge.className  = 'mode-badge mode-badge-vuln';
+        badge.textContent = '🔴 VULNERABLE';
+        fBadge.className  = 'mode-badge mode-badge-vuln';
+        fBadge.textContent = 'VULNERABLE';
+
+        sqlBox.classList.add('vuln-query');
+        sqlBox.classList.remove('safe-query');
+        dot.style.background = 'var(--danger)';
+        qlabel.textContent   = 'Constructed query (string concatenation)';
+
+        explEl.innerHTML = `
+          <div class="warn-panel">
+            <strong>🔴 Vulnerable Mode Active</strong><br/>
+            The backend constructs the SQL query by directly embedding your input using
+            JavaScript template literals (<code>\${username}</code>, <code>\${password}</code>).
+            Any SQL syntax you include in the input is <em>interpreted as real SQL code</em>.
+            Try the injection payloads to bypass authentication.
+          </div>`;
+
+      } else {
+        btnSafe.classList.add('active-secure');
+        btnSafe.classList.remove('active-vulnerable');
+        btnVuln.classList.remove('active-vulnerable', 'active-secure');
+        btnSafe.setAttribute('aria-pressed', 'true');
+        btnVuln.setAttribute('aria-pressed', 'false');
+
+        badge.className  = 'mode-badge mode-badge-safe';
+        badge.textContent = '🟢 SECURE';
+        fBadge.className  = 'mode-badge mode-badge-safe';
+        fBadge.textContent = 'SECURE';
+
+        sqlBox.classList.add('safe-query');
+        sqlBox.classList.remove('vuln-query');
+        dot.style.background = 'var(--success)';
+        qlabel.textContent   = 'Parameterised query template (safe)';
+
+        explEl.innerHTML = `
+          <div class="fix-panel">
+            <strong>🟢 Secure Mode Active</strong><br/>
+            The backend uses <code>?</code> placeholders. Your input is passed as a
+            <em>bound value</em> — the database driver treats it as plain data and
+            never interprets it as SQL syntax. Injection payloads will simply fail to match.
+          </div>`;
+      }
+
+      // Reset result and query display
+      resetDisplay();
+    }
+
+    /* ── Payload chip auto-fill ──────────────────────────────────────────────*/
+    function fillPayload(user, pass) {
+      document.getElementById('demo-username').value = user;
+      document.getElementById('demo-password').value = pass;
+      document.getElementById('demo-username').focus();
+    }
+
+    /* ── Form submit handler ─────────────────────────────────────────────────*/
+    async function handleSubmit(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('demo-username').value;
+      const password = document.getElementById('demo-password').value;
+
+      if (!username) {
+        alert('Please enter a username or select a payload chip.');
+        return;
+      }
+
+      // Set button to loading state
+      const btn     = document.getElementById('demo-submit-btn');
+      const spinner = document.getElementById('demo-spinner');
+      const lbl     = document.getElementById('demo-label');
+      btn.disabled = true;
+      spinner.style.display = 'inline-block';
+      lbl.textContent = 'Running…';
+
+      try {
+        const data = await apiFetch('/api/sqli-demo/login', {
+          method: 'POST',
+          body:   JSON.stringify({ username, password, mode: currentMode })
+        });
+        renderResult(data, username, password);
+      } catch (err) {
+        renderError('Could not reach the server. Is the backend running on port 3000?');
+      }
+
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      lbl.textContent = 'Attempt Login';
+    }
+
+    /* ── Render the query and result ─────────────────────────────────────────*/
+    function renderResult(data, username, password) {
+      // ── SQL display ──────────────────────────────────────────────────────
+      const sqlEl     = document.getElementById('sql-display');
+      const rowsBadge = document.getElementById('query-rows-badge');
+      const paramEl   = document.getElementById('param-values');
+      const paramDisp = document.getElementById('param-display');
+      const qExplEl   = document.getElementById('query-explanation');
+
+      if (data.mode === 'vulnerable') {
+        // Show the actual constructed SQL with syntax highlighting
+        sqlEl.innerHTML = highlightVulnerableSQL(data.constructedSql, username, password);
+        rowsBadge.style.display = 'inline-block';
+        rowsBadge.textContent   = `${data.rowsReturned} row(s) returned`;
+        rowsBadge.style.background = data.rowsReturned > 0 ? 'var(--danger-bg)' : 'var(--success-bg)';
+        rowsBadge.style.color      = data.rowsReturned > 0 ? 'var(--danger)'    : 'var(--success)';
+        paramEl.style.display = 'none';
+
+        qExplEl.style.display = 'block';
+        if (data.queryError) {
+          qExplEl.innerHTML = `<div class="warn-panel">💥 <strong>SQL Error:</strong> ${escapeHtml(data.queryError)}</div>`;
+        } else if (data.rowsReturned > 0) {
+          qExplEl.innerHTML = `<div class="warn-panel">⚠️ The injected clause <code>OR '1'='1'</code> evaluated to TRUE for every row. The <code>--</code> commented out the password check. <strong>${data.rowsReturned} row(s) returned</strong> without valid credentials.</div>`;
+        } else {
+          qExplEl.innerHTML = `<div class="info-panel">The query ran but returned 0 rows — this payload didn't bypass authentication in this instance.</div>`;
+        }
+
+      } else {
+        // Secure mode: show the template, not user-constructed SQL
+        sqlEl.innerHTML = highlightSecureSQL(data.constructedSql);
+        paramEl.style.display = 'block';
+        paramDisp.innerHTML = `
+          <span style="color:#8b949e;">param[0]</span> = <span style="color:#a5d6ff;">"${escapeHtml(username)}"</span><br/>
+          <span style="color:#8b949e;">param[1]</span> = <span style="color:#a5d6ff;">"${escapeHtml(password)}"</span>
+        `;
+        rowsBadge.style.display = 'inline-block';
+        rowsBadge.textContent   = `${data.rowsReturned} row(s) matched`;
+        rowsBadge.style.background = data.rowsReturned > 0 ? 'var(--success-bg)' : 'var(--danger-bg)';
+        rowsBadge.style.color      = data.rowsReturned > 0 ? 'var(--success)'    : 'var(--danger)';
+
+        qExplEl.style.display = 'block';
+        qExplEl.innerHTML = data.rowsReturned > 0
+          ? `<div class="fix-panel">✅ Database searched for a row where <code>username</code> literally equals <code>"${escapeHtml(username)}"</code> and <code>password</code> equals <code>"${escapeHtml(password)}"</code>. Valid credentials matched — login succeeds normally.</div>`
+          : `<div class="fix-panel">🛡️ The input was passed as a <strong>literal string value</strong>, not SQL. The database searched for a row where <code>username = "${escapeHtml(username).substring(0,30)}…"</code>. No such row exists → authentication correctly rejected.</div>`;
+      }
+
+      // ── Result panel ─────────────────────────────────────────────────────
+      const panel   = document.getElementById('result-panel');
+      const liPanel = document.getElementById('logged-in-as');
+
+      if (data.mode === 'vulnerable' && data.success) {
+        // ⚠️ BYPASSED
+        panel.className = 'result-panel bypassed';
+        panel.innerHTML = `
+          <div class="result-icon">⚠️</div>
+          <div>
+            <div class="result-title" style="color:var(--danger);">Authentication BYPASSED!</div>
+            <div class="result-body">${escapeHtml(data.explanation)}</div>
+          </div>`;
+        if (data.loggedInAs) {
+          liPanel.style.display = 'block';
+          liPanel.innerHTML = `
+            <div class="info-panel">
+              <strong>Logged in as (injected access):</strong><br/>
+              Username: <code>${escapeHtml(data.loggedInAs.username)}</code> ·
+              Role: <code>${escapeHtml(data.loggedInAs.role)}</code> ·
+              Name: <code>${escapeHtml(data.loggedInAs.full_name)}</code>
+            </div>`;
+        }
+
+      } else if (data.mode === 'secure' && data.success) {
+        // ✅ Normal login OK
+        panel.className = 'result-panel login-ok';
+        panel.innerHTML = `
+          <div class="result-icon">✅</div>
+          <div>
+            <div class="result-title" style="color:var(--success);">Login Successful</div>
+            <div class="result-body">${escapeHtml(data.explanation)}</div>
+          </div>`;
+        if (data.loggedInAs) {
+          liPanel.style.display = 'block';
+          liPanel.innerHTML = `
+            <div class="fix-panel">
+              <strong>Authenticated user:</strong> <code>${escapeHtml(data.loggedInAs.username)}</code>
+              (${escapeHtml(data.loggedInAs.role)}) — <em>${escapeHtml(data.loggedInAs.full_name)}</em>
+            </div>`;
+        }
+
+      } else if (data.mode === 'secure' && !data.success) {
+        // 🛡️ Attack blocked in secure mode
+        panel.className = 'result-panel blocked';
+        panel.innerHTML = `
+          <div class="result-icon">🛡️</div>
+          <div>
+            <div class="result-title" style="color:var(--success);">Attack Blocked</div>
+            <div class="result-body">${escapeHtml(data.explanation)}</div>
+          </div>`;
+        liPanel.style.display = 'none';
+
+      } else if (data.queryError) {
+        // 💥 SQL syntax error
+        panel.className = 'result-panel error-sql';
+        panel.innerHTML = `
+          <div class="result-icon">💥</div>
+          <div>
+            <div class="result-title" style="color:var(--warning);">SQL Error Occurred</div>
+            <div class="result-body">The injected payload caused a syntax error but could still be dangerous. Error: ${escapeHtml(data.queryError)}</div>
+          </div>`;
+        liPanel.style.display = 'none';
+
+      } else {
+        // Login simply failed in vulnerable mode (no bypass)
+        panel.className = 'result-panel blocked';
+        panel.innerHTML = `
+          <div class="result-icon">🔒</div>
+          <div>
+            <div class="result-title">Login Failed</div>
+            <div class="result-body">${escapeHtml(data.explanation || 'The credentials did not match any account.')}</div>
+          </div>`;
+        liPanel.style.display = 'none';
+      }
+    }
+
+    function renderError(msg) {
+      const panel = document.getElementById('result-panel');
+      panel.className = 'result-panel error-sql';
+      panel.innerHTML = `
+        <div class="result-icon">🚫</div>
+        <div>
+          <div class="result-title">Connection Error</div>
+          <div class="result-body">${escapeHtml(msg)}</div>
+        </div>`;
+    }
+
+    function resetDisplay() {
+      document.getElementById('result-panel').className = 'result-panel idle';
+      document.getElementById('result-panel').innerHTML = `
+        <div class="result-icon">⏳</div>
+        <div>
+          <div class="result-title">Awaiting attempt…</div>
+          <div class="result-body">Select a payload above and click <strong>Attempt Login</strong>.</div>
+        </div>`;
+      document.getElementById('logged-in-as').style.display = 'none';
+      document.getElementById('query-rows-badge').style.display = 'none';
+      document.getElementById('query-explanation').style.display = 'none';
+      document.getElementById('param-values').style.display = 'none';
+
+      const sqlEl = document.getElementById('sql-display');
+      sqlEl.innerHTML = `<span style="color:#8b949e; font-style:italic;">
+  -- Query will appear here after you click Attempt Login
+  SELECT id, username, role, full_name
+  FROM   sqli_demo_users
+  WHERE  username = '[your input]'
+  AND    password = '[your input]'</span>`;
+    }
+
+    /* ── Syntax highlighting helpers ─────────────────────────────────────────*/
+
+    /**
+     * Highlights a vulnerable (string-concatenated) SQL query.
+     * Marks injected portions in orange so students can see exactly
+     * where the user input was embedded.
+     */
+    function highlightVulnerableSQL(sql, username, password) {
+      if (!sql) return '';
+
+      // We colour the keywords, then mark the injected values in orange
+      let highlighted = escapeHtml(sql);
+
+      // Colour SQL keywords
+      highlighted = highlighted.replace(
+        /\b(SELECT|FROM|WHERE|AND|OR|NOT|NULL|IS|IN|LIKE|INSERT|UPDATE|DELETE|JOIN)\b/g,
+        '<span class="sql-keyword">$1</span>'
+      );
+
+      // Highlight the SQL comment portion (-- ...)
+      highlighted = highlighted.replace(
+        /(--[^\n]*)/g,
+        '<span class="sql-comment">$1</span>'
+      );
+
+      // Try to mark the user's injected input in orange
+      // We escape the user value for regex matching
+      if (username) {
+        const escapedU = escapeHtml(username).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        try {
+          highlighted = highlighted.replace(
+            new RegExp(escapedU, 'g'),
+            `<span class="sql-inject">${escapeHtml(username)}</span>`
+          );
+        } catch (e) {}
+      }
+
+      return highlighted;
+    }
+
+    /**
+     * Highlights a secure parameterised SQL template.
+     * Shows ? placeholders in blue to emphasise they are value slots.
+     */
+    function highlightSecureSQL(sql) {
+      if (!sql) return '';
+      let highlighted = escapeHtml(sql);
+      highlighted = highlighted.replace(
+        /\b(SELECT|FROM|WHERE|AND|OR)\b/g,
+        '<span class="sql-keyword">$1</span>'
+      );
+      // Highlight ? placeholders as params
+      highlighted = highlighted.replace(/\?/g, '<span class="sql-param">?</span>');
+      return highlighted;
+    }
+
+    /* ── Load demo accounts table ────────────────────────────────────────────*/
+    async function loadAccounts() {
+      const el = document.getElementById('accounts-table');
+      try {
+        const data = await apiFetch('/api/sqli-demo/accounts');
+        if (!data.success || !data.accounts.length) {
+          el.innerHTML = '<p class="text-muted">No accounts found.</p>';
+          return;
+        }
+        // Password column is intentionally visible here — this is a teaching table
+        const passwords = {
+          demouser:  'demopass',
+          demoadmin: 'adminpass',
+          alice_lab: 'labpass123'
+        };
+        el.innerHTML = `
+          <table class="demo-accounts">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Password (plain text — demo only)</th>
+                <th>Role</th>
+                <th>Full Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.accounts.map(a => `
+                <tr>
+                  <td>${escapeHtml(a.username)}</td>
+                  <td class="pwd-col">${escapeHtml(passwords[a.username] || '—')}</td>
+                  <td><span class="badge ${a.role === 'admin' ? 'badge-blue' : 'badge-green'}">${escapeHtml(a.role)}</span></td>
+                  <td>${escapeHtml(a.full_name)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      } catch (err) {
+        el.innerHTML = '<p class="text-muted" style="font-size:0.84rem;">Could not load accounts (backend offline?).</p>';
+      }
+    }
+
+    /* ── XSS-safe HTML escape ────────────────────────────────────────────────*/
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

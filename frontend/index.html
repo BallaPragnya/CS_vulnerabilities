@@ -3,199 +3,173 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Home – CampusConnect</title>
-  <meta name="description" content="CampusConnect student portal home page. Access the directory, search, diagnostics, and settings modules." />
+  <title>CampusConnect – University Student Portal</title>
+  <meta name="description" content="CampusConnect is your all-in-one university student portal. Access the student directory, campus search, diagnostics, and account settings." />
   <link rel="stylesheet" href="/css/style.css" />
-  <style>
-    /* Hero section styles specific to the homepage */
-    .hero {
-      padding: var(--space-2xl) 0 var(--space-xl);
-      position: relative;
-    }
-    .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      background: rgba(99,102,241,0.12);
-      border: 1px solid rgba(99,102,241,0.25);
-      border-radius: var(--radius-full);
-      padding: 4px 14px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--color-primary-h);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin-bottom: var(--space-md);
-    }
-    .hero h1 {
-      font-size: 2.5rem;
-      line-height: 1.2;
-      max-width: 600px;
-    }
-    .hero p {
-      max-width: 520px;
-      font-size: 1rem;
-      margin-top: var(--space-sm);
-      margin-bottom: var(--space-xl);
-    }
-    .hero-actions {
-      display: flex;
-      gap: var(--space-md);
-      flex-wrap: wrap;
-    }
-
-    /* Module colour theming */
-    #card-directory   { --module-color: #6366f1; }
-    #card-search      { --module-color: #22d3ee; }
-    #card-diagnostics { --module-color: #f59e0b; }
-    #card-settings    { --module-color: #10b981; }
-
-    .module-card .module-icon {
-      background: rgba(var(--module-color-rgb, 99,102,241), 0.12);
-    }
-
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: var(--space-lg);
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-    .section-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--color-border);
-    }
-
-    /* Credential table */
-    .creds-card { margin-top: var(--space-xl); }
-  </style>
 </head>
-<body>
-  <div class="layout">
+<body class="landing-body">
 
-    <!-- Sidebar (injected by common.js) -->
-    <aside id="sidebar" class="sidebar"></aside>
+  <!-- ══════════════════════════════════════════════════
+       TOP NAVIGATION BAR
+  ══════════════════════════════════════════════════ -->
+  <nav class="landing-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-logo">
+      <div class="logo-mark" aria-hidden="true">🎓</div>
+      <div>
+        <div class="logo-name">CampusConnect</div>
+        <div style="font-size:0.65rem; color:rgba(255,255,255,0.5); font-weight:400;">University Student Portal</div>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <a href="/login.html" class="btn btn-outline-white btn-sm" id="nav-login-btn">Sign In</a>
+      <a href="/register.html" class="btn btn-white btn-sm" id="nav-register-btn">Register</a>
+    </div>
+  </nav>
 
-    <!-- Main content -->
-    <div class="main-content">
+  <!-- ══════════════════════════════════════════════════
+       HERO SECTION
+  ══════════════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <!-- Eyebrow label -->
+      <div class="hero-eyebrow">🏫 Greenwood University — Student Portal 2026</div>
 
-      <!-- Top bar -->
-      <header class="topbar">
-        <div class="topbar-left">
-          <div class="topbar-breadcrumb">
-            CampusConnect / <span>Home</span>
-          </div>
-        </div>
-        <div class="topbar-right">
-          <span id="topbar-user" class="text-sm text-muted"></span>
-        </div>
-      </header>
+      <!-- Main heading -->
+      <h1>Your Campus,<br/><span>Fully Connected</span></h1>
 
-      <!-- Page body -->
-      <div class="page-inner">
+      <!-- Sub-description -->
+      <p>CampusConnect brings together student directory management, campus announcements, network diagnostics, and account tools — all in one elegant platform designed for the modern university.</p>
 
-        <!-- Hero section -->
-        <section class="hero fade-in">
-          <div class="hero-eyebrow">🎓 University Portal</div>
-          <h1>Welcome to<br/>CampusConnect</h1>
-          <p>Your all-in-one platform for student management, directory lookup, diagnostics, and account settings.</p>
-          <div class="hero-actions">
-            <a href="/dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard →</a>
-            <a href="/directory.html" class="btn btn-outline btn-lg">Browse Directory</a>
-          </div>
-        </section>
+      <!-- Call-to-action buttons -->
+      <div class="hero-cta">
+        <!-- Primary CTA: takes the student to the login page -->
+        <a href="/login.html" class="hero-btn-primary" id="hero-login-btn">
+          🔐 Sign In to Portal
+        </a>
+        <!-- Secondary CTA: takes a new user to the registration page -->
+        <a href="/register.html" class="hero-btn-outline" id="hero-register-btn">
+          ✏️ Register Account
+        </a>
+      </div>
+    </div>
+  </section>
 
-        <!-- Modules section -->
-        <section>
-          <div class="section-title">Portal Modules</div>
-          <div class="grid grid-2 gap-lg">
+  <!-- ══════════════════════════════════════════════════
+       STATS STRIP  –  Quick numbers about the portal
+  ══════════════════════════════════════════════════ -->
+  <div class="stats-strip" aria-label="Portal statistics">
+    <div class="stat-item">
+      <div class="s-num">1,240+</div>
+      <div class="s-lbl">Enrolled Students</div>
+    </div>
+    <div class="stat-item">
+      <div class="s-num">12</div>
+      <div class="s-lbl">Departments</div>
+    </div>
+    <div class="stat-item">
+      <div class="s-num">99.8%</div>
+      <div class="s-lbl">Portal Uptime</div>
+    </div>
+    <div class="stat-item">
+      <div class="s-num">24/7</div>
+      <div class="s-lbl">Support Access</div>
+    </div>
+  </div>
 
-            <a href="/directory.html" class="module-card card-hover" id="card-directory">
-              <div class="module-icon" style="background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.2);">📋</div>
-              <div>
-                <div class="module-title">Student Directory</div>
-                <div class="module-desc">Browse and manage the full list of enrolled students. View names, departments, years, and GPA records.</div>
-              </div>
-            </a>
+  <!-- ══════════════════════════════════════════════════
+       FEATURES SECTION  –  Portal module highlights
+  ══════════════════════════════════════════════════ -->
+  <section class="features" id="features" aria-labelledby="features-heading">
+    <div style="text-align:center; margin-bottom:2.5rem;">
+      <div style="display:inline-block; background:var(--blue-light); color:var(--blue); font-size:0.75rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding:4px 16px; border-radius:999px; margin-bottom:0.75rem;">What's Inside</div>
+      <h2 id="features-heading" style="font-size:1.9rem; margin-bottom:0.5rem;">Everything You Need,<br/>In One Place</h2>
+      <p style="max-width:500px; margin:0 auto;">Six powerful modules built for students, teachers, and administrators — no juggling multiple systems.</p>
+    </div>
 
-            <a href="/search.html" class="module-card card-hover" id="card-search">
-              <div class="module-icon" style="background:rgba(34,211,238,0.12); border-color:rgba(34,211,238,0.2);">🔍</div>
-              <div>
-                <div class="module-title">Search</div>
-                <div class="module-desc">Search for students by name, email address, or department using the live search interface.</div>
-              </div>
-            </a>
+    <div class="features-grid">
 
-            <a href="/diagnostics.html" class="module-card card-hover" id="card-diagnostics">
-              <div class="module-icon" style="background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.2);">🖥️</div>
-              <div>
-                <div class="module-title">Server Diagnostics</div>
-                <div class="module-desc">Monitor server health, uptime, memory usage, and view the full audit log of user actions.</div>
-              </div>
-            </a>
+      <!-- Feature 1: Dashboard -->
+      <div class="feature-card" role="article">
+        <div class="feature-icon" style="background:rgba(37,99,235,0.1);">📊</div>
+        <h3>Personal Dashboard</h3>
+        <p>View your profile, upcoming events, latest campus announcements, and quick links to all portal modules at a glance.</p>
+      </div>
 
-            <a href="/settings.html" class="module-card card-hover" id="card-settings">
-              <div class="module-icon" style="background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.2);">⚙️</div>
-              <div>
-                <div class="module-title">Settings</div>
-                <div class="module-desc">View and update your profile information including display name and email address.</div>
-              </div>
-            </a>
+      <!-- Feature 2: Student Directory -->
+      <div class="feature-card" role="article">
+        <div class="feature-icon" style="background:rgba(16,185,129,0.1);">👥</div>
+        <h3>Student Directory</h3>
+        <p>Browse the full list of enrolled students. Filter by department, search by name or enrollment number, and view GPA records.</p>
+      </div>
 
-          </div>
-        </section>
+      <!-- Feature 3: Campus Search -->
+      <div class="feature-card" role="article">
+        <div class="feature-icon" style="background:rgba(234,88,12,0.1);">🔍</div>
+        <h3>Campus Search</h3>
+        <p>Search across announcements and campus events instantly. Find information about exams, seminars, and campus life activities.</p>
+      </div>
 
-        <!-- Credentials quick reference -->
-        <section class="creds-card">
-          <div class="section-title">Lab Credentials</div>
-          <div class="card">
-            <div class="table-wrapper">
-              <table>
-                <thead>
-                  <tr><th>Role</th><th>Username</th><th>Password</th><th>Access Level</th></tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><span class="badge badge-danger">admin</span></td>
-                    <td class="font-mono">admin</td>
-                    <td class="font-mono">admin123</td>
-                    <td class="text-muted">Full access to all modules</td>
-                  </tr>
-                  <tr>
-                    <td><span class="badge badge-warning">teacher</span></td>
-                    <td class="font-mono">teacher</td>
-                    <td class="font-mono">teacher123</td>
-                    <td class="text-muted">View and manage student records</td>
-                  </tr>
-                  <tr>
-                    <td><span class="badge badge-primary">student</span></td>
-                    <td class="font-mono">alice</td>
-                    <td class="font-mono">alice123</td>
-                    <td class="text-muted">Limited read-only access</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+      <!-- Feature 4: Network Diagnostics -->
+      <div class="feature-card" role="article">
+        <div class="feature-icon" style="background:rgba(124,58,237,0.1);">🌐</div>
+        <h3>Network Diagnostics</h3>
+        <p>Check campus network connectivity. Enter a hostname and run a live connectivity diagnostic to monitor network reachability.</p>
+      </div>
 
-      </div><!-- /page-inner -->
-    </div><!-- /main-content -->
-  </div><!-- /layout -->
+      <!-- Feature 5: Account Settings -->
+      <div class="feature-card" role="article">
+        <div class="feature-icon" style="background:rgba(217,119,6,0.1);">⚙️</div>
+        <h3>Account Settings</h3>
+        <p>Update your display name, email address, and profile information. Keep your student record accurate and up to date.</p>
+      </div>
 
-  <script src="/js/common.js"></script>
+      <!-- Feature 6: Secure Access -->
+      <div class="feature-card" role="article">
+        <div class="feature-icon" style="background:rgba(220,38,38,0.1);">🔒</div>
+        <h3>Secure & Role-Based</h3>
+        <p>Role-based access control ensures that students, teachers, and admins each see only what they're permitted to access.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════
+       CALL-TO-ACTION BANNER
+  ══════════════════════════════════════════════════ -->
+  <section style="background: linear-gradient(135deg, var(--navy) 0%, #2563eb 100%); padding: 3.5rem 3rem; text-align: center; color: white;">
+    <h2 style="color:white; font-size:1.8rem; margin-bottom:0.75rem;">Ready to get started?</h2>
+    <p style="opacity:0.8; margin-bottom:2rem; font-size:1rem;">Sign in with your university credentials or register a new account to begin.</p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+      <a href="/login.html" class="hero-btn-primary" id="cta-login-btn">Sign In Now</a>
+      <a href="/register.html" class="hero-btn-outline" id="cta-register-btn">Create Account</a>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════════ -->
+  <footer class="landing-footer" role="contentinfo">
+    <p>© 2026 Greenwood University – CampusConnect Student Portal. All rights reserved.</p>
+    <p style="margin-top:0.3rem; font-size:0.72rem; opacity:0.6;">This is a university CS assignment project. For educational purposes only.</p>
+  </footer>
+
   <script>
-    // Initialise sidebar on the homepage
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await checkAuth();
-      if (!user) return;
-      buildSidebar(user);
-      document.getElementById('topbar-user').textContent = user.full_name;
-    });
+    /* ── Landing page JavaScript ───────────────────────────────────────────
+       The home page is PUBLIC – it does not require a session.
+       We just check if the user is already logged in and redirect them
+       to the dashboard so they don't see the landing page again.      */
+    (async () => {
+      try {
+        const res  = await fetch('/api/auth/me', { credentials: 'include' });
+        const data = await res.json();
+        // If the user is already authenticated, skip the landing page
+        if (data.success) {
+          window.location.href = '/dashboard.html';
+        }
+      } catch (e) {
+        // Backend not running – that's fine, stay on the landing page
+      }
+    })();
   </script>
 </body>
 </html>
