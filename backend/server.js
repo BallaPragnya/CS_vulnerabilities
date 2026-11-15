@@ -19,11 +19,15 @@ const path       = require('path');
 const { initDatabase } = require('./database');
 
 // Import all route modules
-const authRoutes        = require('./routes/auth');
-const directoryRoutes   = require('./routes/directory');
-const diagnosticsRoutes = require('./routes/diagnostics');
-const searchRoutes      = require('./routes/search');
-const settingsRoutes    = require('./routes/settings');
+const authRoutes          = require('./routes/auth');
+const directoryRoutes     = require('./routes/directory');
+const diagnosticsRoutes   = require('./routes/diagnostics');
+const searchRoutes        = require('./routes/search');
+const settingsRoutes      = require('./routes/settings');
+const announcementsRoutes = require('./routes/announcements');
+const commentsRoutes      = require('./routes/comments');
+// ⚠️  SECURITY LAB ONLY – intentionally vulnerable demo route (localhost only)
+const sqliDemoRoutes      = require('./routes/sqli-demo');
 
 // ── Create the Express app ───────────────────────────────────────────────────
 const app  = express();
@@ -63,11 +67,15 @@ app.use(express.static(frontendPath));
 
 // ── API Routes ───────────────────────────────────────────────────────────────
 // All API endpoints are prefixed with /api/ to separate them from static files
-app.use('/api/auth',        authRoutes);
-app.use('/api/directory',   directoryRoutes);
-app.use('/api/diagnostics', diagnosticsRoutes);
-app.use('/api/search',      searchRoutes);
-app.use('/api/settings',    settingsRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/directory',     directoryRoutes);
+app.use('/api/diagnostics',   diagnosticsRoutes);
+app.use('/api/search',        searchRoutes);
+app.use('/api/settings',      settingsRoutes);
+app.use('/api/announcements', announcementsRoutes);
+app.use('/api/comments',      commentsRoutes);
+// ⚠️  SECURITY LAB: SQL injection demo – for educational demonstration on localhost only
+app.use('/api/sqli-demo',     sqliDemoRoutes);
 
 // ── Catch-all route ──────────────────────────────────────────────────────────
 // For any URL that doesn't match a file or API route, serve the homepage.

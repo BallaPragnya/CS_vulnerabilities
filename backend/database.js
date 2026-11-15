@@ -20,6 +20,7 @@
 const initSqlJs = require('sql.js');
 const path      = require('path');
 const fs        = require('fs');
+const bcrypt    = require('bcryptjs');
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 
@@ -130,6 +131,32 @@ const db = {
   pragma() {}
 };
 
+// ── dangerousRawQuery (FOR SQL INJECTION DEMO ONLY) ──────────────────────────
+//
+// ⚠️  WARNING: This function executes a raw SQL string with NO parameterisation.
+//     It exists solely to demonstrate why string-concatenated queries are
+//     vulnerable to SQL injection attacks.
+//
+//     NEVER call this function with user input in production code.
+//     NEVER use this function outside of the sqli-demo route.
+//
+function dangerousRawQuery(sql) {
+  try {
+    // sql.js exec() runs the raw SQL string as-is — attacker input included.
+    const results = _db.exec(sql);
+    if (!results || results.length === 0) return [];   // No rows matched
+    const { columns, values } = results[0];
+    return values.map(row => {
+      const obj = {};
+      columns.forEach((col, i) => { obj[col] = row[i]; });
+      return obj;
+    });
+  } catch (err) {
+    // Re-throw so the route can catch and display the SQL error to the student
+    throw err;
+  }
+}
+
 // ── initDatabase (async) ─────────────────────────────────────────────────────
 
 async function initDatabase() {
@@ -192,23 +219,46 @@ async function initDatabase() {
     )
   `);
 
+  // Announcements table – campus-wide notices and updates
+  _db.exec(`
+    CREATE TABLE IF NOT EXISTS announcements (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      title       TEXT NOT NULL,
+      description TEXT NOT NULL,
+      category    TEXT NOT NULL DEFAULT 'General',
+      icon        TEXT NOT NULL DEFAULT '📢',
+      created_at  TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  // Comments table – student feedback on the portal
+  _db.exec(`
+    CREATE TABLE IF NOT EXISTS comments (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      student_id   INTEGER NOT NULL REFERENCES users(id),
+      username     TEXT    NOT NULL,
+      comment_text TEXT    NOT NULL,
+      created_at   TEXT    DEFAULT (datetime('now'))
+    )
+  `);
+
   // ── Seed sample users (only when the table is empty) ──────────────────────
 
   const userCount = db.prepare('SELECT COUNT(*) AS count FROM users').get();
   if (!userCount || userCount.count === 0) {
 
+    const SALT_ROUNDS = 10;
     const ins = db.prepare(
       'INSERT INTO users (username, password, role, full_name, email) VALUES (?, ?, ?, ?, ?)'
     );
-    // NOTE: Passwords are plain-text intentionally for the security lab demo.
-    // In production, always hash passwords (e.g. with bcrypt).
-    ins.run('admin',   'admin123',   'admin',   'Admin User',        'admin@campusconnect.edu');
-    ins.run('teacher', 'teacher123', 'teacher', 'Dr. Sarah Johnson', 'sjohnson@campusconnect.edu');
-    ins.run('alice',   'alice123',   'student', 'Alice Smith',       'alice@campusconnect.edu');
-    ins.run('bob',     'bob123',     'student', 'Bob Jones',         'bob@campusconnect.edu');
-    ins.run('charlie', 'charlie123', 'student', 'Charlie Brown',     'charlie@campusconnect.edu');
+    // Passwords are stored as bcrypt hashes.
+    ins.run('admin',   bcrypt.hashSync('admin123',   SALT_ROUNDS), 'admin',   'Admin User',        'admin@campusconnect.edu');
+    ins.run('teacher', bcrypt.hashSync('teacher123', SALT_ROUNDS), 'teacher', 'Dr. Sarah Johnson', 'sjohnson@campusconnect.edu');
+    ins.run('alice',   bcrypt.hashSync('alice123',   SALT_ROUNDS), 'student', 'Alice Smith',       'alice@campusconnect.edu');
+    ins.run('bob',     bcrypt.hashSync('bob123',     SALT_ROUNDS), 'student', 'Bob Jones',         'bob@campusconnect.edu');
+    ins.run('charlie', bcrypt.hashSync('charlie123', SALT_ROUNDS), 'student', 'Charlie Brown',     'charlie@campusconnect.edu');
 
-    console.log('[DB] Seeded users table with 5 sample accounts.');
+    console.log('[DB] Seeded users table with 5 sample accounts (bcrypt hashed passwords).');
   }
 
   // ── Seed sample student records (only when the table is empty) ────────────
@@ -234,9 +284,64 @@ async function initDatabase() {
     console.log('[DB] Seeded students table with 8 sample records.');
   }
 
+  // ── Seed sample announcements (only when the table is empty) ──────────────
+
+  const annCount = db.prepare('SELECT COUNT(*) AS count FROM announcements').get();
+  if (!annCount || annCount.count === 0) {
+
+    const ins = db.prepare(
+      'INSERT INTO announcements (title, description, category, icon) VALUES (?, ?, ?, ?)'
+    );
+    ins.run('Mid-Semester Exam Schedule Released',
+      'The mid-semester examination timetable has been posted on the student portal. Please review your schedule and report any conflicts to the examination office by Friday.',
+      'Academic', '📅');
+    ins.run('Campus Maintenance: Library Closed This Weekend',
+      'The main library building will be closed on Saturday and Sunday for routine HVAC maintenance. Digital resources remain available 24/7 through the library website.',
+      'Facilities', '🏛️');
+    ins.run('Scholarship Applications Now Open',
+      'Applications for the Merit Scholarship 2025 are now open. Eligible students with a GPA of 3.5 or above may apply through the financial aid portal before December 15.',
+      'Financial Aid', '🎓');
+    ins.run('New Research Lab Inaugurated',
+      'The Department of Computer Science proudly inaugurated its new Cybersecurity Research Lab today. The lab is equipped with cutting-edge hardware for penetration testing and secure systems research.',
+      'Facilities', '🔬');
+    ins.run('Inter-University Hackathon – Register Now',
+      'Team CampusConnect is hosting the annual Inter-University Hackathon on December 10–11. Prizes worth ₹1,00,000 are up for grabs. Register before November 30.',
+      'Events', '💻');
+
+    console.log('[DB] Seeded announcements table with 5 sample records.');
+  }
+
+  // ── SQL Injection Demo table ──────────────────────────────────────────────
+  //
+  // ⚠️  DEMO ONLY: Passwords stored as PLAIN TEXT so the vulnerable SQL query
+  //     can compare them directly in the WHERE clause.  This intentional design
+  //     is part of the security demonstration — do NOT copy this pattern.
+  //
+  _db.exec(`
+    CREATE TABLE IF NOT EXISTS sqli_demo_users (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      username  TEXT NOT NULL UNIQUE,
+      password  TEXT NOT NULL,          -- plain text, demo table only
+      role      TEXT NOT NULL DEFAULT 'demo',
+      full_name TEXT NOT NULL
+    )
+  `);
+
+  const demoCount = db.prepare('SELECT COUNT(*) AS count FROM sqli_demo_users').get();
+  if (!demoCount || demoCount.count === 0) {
+    const ins = db.prepare(
+      'INSERT INTO sqli_demo_users (username, password, role, full_name) VALUES (?, ?, ?, ?)'
+    );
+    // Seed three demo-only accounts with simple, known passwords
+    ins.run('demouser',  'demopass',   'student', 'Demo Student');
+    ins.run('demoadmin', 'adminpass',  'admin',   'Demo Admin');
+    ins.run('alice_lab', 'labpass123', 'student', 'Alice (Lab Account)');
+    console.log('[DB] Seeded sqli_demo_users table with 3 demo accounts.');
+  }
+
   // Persist the initialised (and possibly seeded) database to disk
   saveDb();
   console.log('[DB] Database ready.');
 }
 
-module.exports = { db, initDatabase };
+module.exports = { db, dangerousRawQuery, initDatabase };
